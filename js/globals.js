@@ -1,12 +1,18 @@
 var map;
 var markers = [];
+var markerColors = ['red', 'blue', 'yellow', 'green', 'purple', 'orange'];
+var enableMarkerColors = false;
 
-function addMarker(location) {
-	var marker = new google.maps.Marker({
-		position: location,
-		map: map
-	});
-	markers.push(marker);
+function addMarker (location, data) {
+    var number = enableMarkerColors ? parseInt((data[1]).replace(/[^0-9]/g, '')) : 0;
+    var iconUrl = "http://maps.google.com/mapfiles/ms/icons/" + markerColors[number%markerColors.length] + ".png";
+    var marker = new google.maps.Marker({
+        position: location,
+        map: map,
+        title: data[1] + " (" + data[0] + ")",
+        icon: new google.maps.MarkerImage(iconUrl)
+    });
+    markers.push(marker);
 }
 
 function setAllMap(map) {
@@ -47,17 +53,33 @@ google.maps.Map.prototype.clearMarkers = function() {
     this.markers = new Array();
 };
 
-$(document).on("click","#search", function(event){
-	event.preventDefault();  
-	var q = $("#busLine").val();
+var loadTimeout = 0;
+var currentLine = '';
+function Load(){
+    var line = currentLine + "_" + loadTimeout;
+    $.getJSON("/proxy.php?linha=",
+        {
+            linha: currentLine,
+            rand: Math.round(Math.random()*999999)
+        },
+        function(data) {
+            if (line != currentLine + "_" + loadTimeout) return;
 
-	$.getJSON("/proxy.php?linha="+q, function(data){
-		setAllMap(null);
-		for (var i = 0; i < data.DATA.length; i++) {
-			var latLng = new google.maps.LatLng(data.DATA[i][3],
-			data.DATA[i][4]);
-			addMarker(latLng);
-		}
-	});
+            setAllMap(null);
+            for (var i = 0; i < data.DATA.length; i++) {
+                var latLng = new google.maps.LatLng(data.DATA[i][3],
+                    data.DATA[i][4]);
+                addMarker(latLng, data.DATA[i]);
+            }
+
+            loadTimeout = setTimeout(function(){ Load(); }, 1500);
+        }
+    );
+}
+$(document).on("click","#search", function(event){
+    event.preventDefault();
+    currentLine = $("#busLine").val();
+    Load();
 });
+
 google.maps.event.addDomListener(window, 'load', initialize);
