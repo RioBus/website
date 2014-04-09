@@ -12,6 +12,14 @@ function addMarker (location, data) {
         title: data[1] + " (" + data[0] + ")",
         icon: new google.maps.MarkerImage(iconUrl)
     });
+    marker.info = new google.maps.InfoWindow({
+		content: "Código: " + data[1] + "</br>" +
+				 "Hora: " + new Date(Date.parse(data[0], 'MM-dd-yyyy hh:mm:ss')).toLocaleString('pt-BR') + "</br>" +
+				 "Velocidade: " + data[5] + " Km/h</br>"
+	});
+	google.maps.event.addListener(marker, 'click', function() {
+		marker.info.open(map, marker);
+	});
     markers.push(marker);
 }
 
@@ -48,7 +56,7 @@ function initialize() {
 
 google.maps.Map.prototype.clearMarkers = function() {
     for(var i=0; i < this.markers.length; i++){
-	this.markers[i].setMap(null);
+		this.markers[i].setMap(null);
     }
     this.markers = new Array();
 };
@@ -72,7 +80,7 @@ function Load(){
                 addMarker(latLng, data.DATA[i]);
             }
 
-            loadTimeout = setTimeout(function(){ Load(); }, 1500);
+            loadTimeout = setTimeout(function(){ Load(); }, 15000);
         }
     );
 }
