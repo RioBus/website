@@ -13,9 +13,11 @@ function addMarker (location, data) {
         icon: new google.maps.MarkerImage(iconUrl)
     });
     marker.info = new google.maps.InfoWindow({
-		content: "Código: " + data[1] + "</br>" +
+		content: '<div style="line-height:1.35;overflow:hidden;white-space:nowrap;">' +
+                 "Código: " + data[1] + "</br>" +
 				 "Hora: " + new Date(Date.parse(data[0], 'MM-dd-yyyy hh:mm:ss')).toLocaleString('pt-BR') + "</br>" +
-				 "Velocidade: " + data[5] + " Km/h</br>"
+				 "Velocidade: " + data[5] + " Km/h</br>" +
+                 "</div>"
 	});
 	google.maps.event.addListener(marker, 'click', function() {
 		marker.info.open(map, marker);
