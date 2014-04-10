@@ -3,7 +3,8 @@ var markers = [];
 var markerColors = ['red', 'yellow', 'green'];
 
 function addMarker (location, data) {  
-    var gpsTime = new Date(Date.parseExact(data[0], 'MM-dd-yyyy hh:mm:ss'));
+    var dataBR = data[0].substring(3,6) + data[0].substring(0,2) + data[0].substring(5);
+    var gpsTime = new Date(Date.parse(dataBR));
 
 	var iconUrl;
 	if (Math.abs(new Date() - gpsTime)/1000/60 > 10) {
