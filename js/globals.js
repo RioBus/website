@@ -1,21 +1,29 @@
 var map;
 var markers = [];
-var markerColors = ['red', 'blue', 'yellow', 'green', 'purple', 'orange'];
-var enableMarkerColors = false;
+var markerColors = ['red', 'yellow', 'green'];
 
-function addMarker (location, data) {
-    var number = enableMarkerColors ? parseInt((data[1]).replace(/[^0-9]/g, '')) : 0;
-    var iconUrl = "http://maps.google.com/mapfiles/ms/icons/" + markerColors[number%markerColors.length] + ".png";
+function addMarker (location, data) {  
+    var gpsTime = new Date(Date.parseExact(data[0], 'MM-dd-yyyy hh:mm:ss'));
+
+	var iconUrl;
+	if (Math.abs(new Date() - gpsTime)/1000/60 > 10) {
+		iconUrl = "/img/bus_" + markerColors[0] + ".png";
+	} else if (Math.abs(new Date() - gpsTime)/1000/60 > 5) {
+		iconUrl = "/img/bus_" + markerColors[1] + ".png";
+	} else {
+		iconUrl = "/img/bus_" + markerColors[2] + ".png";
+	}
+  
     var marker = new google.maps.Marker({
         position: location,
         map: map,
         title: data[1] + " (" + data[0] + ")",
         icon: new google.maps.MarkerImage(iconUrl)
     });
-    marker.info = new google.maps.InfoWindow({
+	marker.info = new google.maps.InfoWindow({
 		content: '<div style="line-height:1.35;overflow:hidden;white-space:nowrap;">' +
                  "Código: " + data[1] + "</br>" +
-				 "Hora: " + new Date(Date.parse(data[0], 'MM-dd-yyyy hh:mm:ss')).toLocaleString('pt-BR') + "</br>" +
+				 "Hora: " + gpsTime.toLocaleString('pt-BR') + "</br>" +
 				 "Velocidade: " + data[5] + " Km/h</br>" +
                  "</div>"
 	});
