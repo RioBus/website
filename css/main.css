@@ -60,7 +60,7 @@ body {
 #about {
 	margin: 0 0 10px 0;
 	padding: 10px;
-
+    cursor: pointer;
 	border: 1px solid #d8d8d8; 
 	background: #f9f9f9;
 	 
