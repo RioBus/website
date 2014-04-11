@@ -101,4 +101,9 @@ $(document).on("click","#search", function(event){
     Load();
 });
 
+$(document).on("click","#about", function(event){
+    event.preventDefault();
+    $("#aboutText").bPopup();
+});
+
 google.maps.event.addDomListener(window, 'load', initialize);
