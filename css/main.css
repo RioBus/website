@@ -13,7 +13,7 @@ body {
 }
 
 #searchBox input.field{
-	position: relative;
+    position: relative;
 	background-color: #fff;
 	border: none;
 	height: 48px;
@@ -50,8 +50,27 @@ body {
     width: auto;
     position: absolute;
     right: 10%;
-    bottom: 5%;
-    
+    bottom: 5%;    
+}
+
+.badge img {
+	width: 120px;
+}
+
+#about {
+	margin: 0 0 10px 0;
+	padding: 10px;
+
+	border: 1px solid #d8d8d8; 
+	background: #f9f9f9;
+	 
+	-moz-border-radius: 4px; 
+	-webkit-border-radius: 4px; 
+	border-radius: 4px; 
+	-moz-box-shadow: inset 0 0 0 1px #fff;
+	-webkit-box-shadow: inset 0 0 0 1px #fff;
+	box-shadow: inset 0 0 0 1px #fff; 
+	
 }
 
 @media screen and (max-width: 800px) { 
@@ -77,4 +96,27 @@ body {
 
 }
 
+.modal {
+	background-color:#fff;
+	display:none;
+	width:350px;
+	padding:15px;
+	text-align:left;
+	border:2px solid #333;
 
+	opacity:0.8;
+	-moz-border-radius:6px;
+	-webkit-border-radius:6px;
+	-moz-box-shadow: 0 0 50px #ccc;
+	-webkit-box-shadow: 0 0 50px #ccc;
+}
+
+.modal h2 {
+	background:url(/media/img/global/info.png) 0 50% no-repeat;
+	margin:0px;
+	padding:10px 0 10px 45px;
+	border-bottom:1px solid #333;
+	font-size:20px;
+}
+
+#aboutText { display:none; }
