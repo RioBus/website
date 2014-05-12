@@ -78,8 +78,9 @@ function Load(){
     var line = currentLine + "_" + loadTimeout;
     $.getJSON("/proxy.php",
         {
+			s: "1",
             linha: currentLine,
-            rand: Math.round(Math.random()*999999)
+            rand: Math.round(Math.random()*999999)			
         },
         function(data) {
             if (line != currentLine + "_" + loadTimeout) return;
@@ -90,6 +91,7 @@ function Load(){
                     data.DATA[i][4]);
                 addMarker(latLng, data.DATA[i]);
             }
+			ga('send', 'pageview');
     		clearTimeout(loadTimeout);
             loadTimeout = setTimeout(function(){ Load(); }, 15000);
         }
