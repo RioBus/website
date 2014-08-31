@@ -1,0 +1,3 @@
+[submodule "riob-us"]
+	path = riob-us
+	url = git@git.rootshell.privatedns.org:marquinho/riob-us.git
