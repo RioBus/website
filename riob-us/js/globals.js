@@ -114,11 +114,12 @@ function findBus(clicked){
             linha: currentLine,
             rand: Math.round(Math.random()*999999)
         },
-        function(data){
+        function(data, status){
+			console.log (status);
             if (line != currentLine + "_" + loadTimeout) return;
             $("#spinner").hide(0);
             if(data.DATA.length==0)
-                toast("Desculpe, não encontrei esta linha.", 3);
+                toast("Desculpe, não encontrei esta linha.", 5);
             else{
                 setAllMap(null);
                 clearMarkersPositions();
@@ -132,15 +133,18 @@ function findBus(clicked){
                      map.fitBounds(bounds);
                 }
 
-                ga('send', 'pageview');
+                _gaq.push(['_trackPageview']);
                 clearTimeout(loadTimeout);
                 loadTimeout = setTimeout(function(){ findBus(false); }, 15000);
                 console.log("A busca retornou "+data.DATA.length+" resultados.");
             }
     }).error(function(e){
-        $("#spinner").hide(0);
-        toast("Desculpe, ocorreu algum erro. Tente novamente.", 3);
-        console.log(e.statusText);
+        $("#spinner").hide(0);		        
+		console.log(e);
+		if (e.responseText.indexOf("Server Error") > -1)
+			toast("O servidor da prefeitura está fora do ar neste momento. Tente novamente mais tarde.", 5);
+		else
+			toast("Desculpe, ocorreu algum erro. Tente novamente.", 5);
     });
 }
 
@@ -151,7 +155,7 @@ $("#searchBox").submit(function(event){
     findBus(true);
 });
 
-$('.modal').easyModal({top: 20});
+$('.modal').easyModal({top: 30});
 
 $('#btn-about').click(function(e){
     e.preventDefault();
