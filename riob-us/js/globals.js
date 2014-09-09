@@ -108,6 +108,7 @@ google.maps.Map.prototype.clearMarkers = function() {
 
 function findBus(clicked){
     currentLine = $("#busLine").val();
+	history.pushState(null, "Rio Bus - " + currentLine, "?" + currentLine);
     var line = currentLine + "_" + loadTimeout;
     $.getJSON("/proxy.php",{
             s: "1", 
