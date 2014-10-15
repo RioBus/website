@@ -45,19 +45,29 @@ var httpGETCallback = function (response) {
 
 		var data = []; // variable that is here to represent a simple data structure
 		/*
-			data will be a hashtable/hashmap like this 
+			data will be a hashtable/hashmap, where the key will be the bus line and the value
+			will be all the busses on this line that came in the JSON response, like this:
+
 			key 			: 	value 
-			"/<bus line>"	: 	[[<bus info>], [<bus info>], ...]
+			"<bus line>"	: 	[<bus info>, <bus info>, ...]
+
+			where <bus info> = ["DATAHORA","ORDEM","LINHA","LATITUDE","LONGITUDE","VELOCIDADE","DIRECAO"]
+			and <bus line> = "LINHA"
+
+			I have decided to build the structure in this way because I believe this is the way we should build our
+			future database. This structre makes the search for all the busses in a bus line, retrieve a single value
+			from one key. This is the main operation done in the project: a search for all the busses from one bus line.
 		*/
 
 		// loop running backwards, according to v8's engine recommendation
 		console.log("There are " + json['DATA'].length + " busses on-line")
 		for (var i = json['DATA'].length - 1; i >= 0; i--) {
-			var key = "/" + json['DATA'][i][2]; // string that will be the key for the hash structure
+			var key = "" + json['DATA'][i][2]; // string that will be the key for the hash structure. 
+			// "" + INTEGER, parses the INTEGER to a string. javascript's fastest way parse from integer to string.
 			if (data[key]){ // if key already exists in data structure
 				data[key].push(json['DATA'][i]); // add this bus to this key (add bus to its respective line)
 			} else { // if key doesn't exist
-				data[key] = []; // instance an array in the key
+				data[key] = []; // instantiate an array in the key
 				data[key].push(json['DATA'][i]); // add this bus to this key (add bus to its respective line)
 			}
 		}
