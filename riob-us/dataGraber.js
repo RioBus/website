@@ -1,9 +1,10 @@
 /*	things to do in this code
-	1- read url's path and host and timeInterval from a file before every request sent. 
+	1- keep updating comments as code changes.
+	2- read url's path and host and timeInterval from a file before every request sent. 
 This way, we don't need to restart the code if those things change.
-	2 - delete comments that print information that is useless for this code. Like number of bus lines.
+	3- delete comments that print information that is useless for this code. Like number of bus lines.
 This kind of information is useful for someone else, somewhere else, but not here, not for this code.
-	3- keep updating comments as code changes.
+	4- add code that will store the JSON data, from the response, in a file or database
 */
 
 
