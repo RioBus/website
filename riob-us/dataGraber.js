@@ -9,6 +9,7 @@ var http = require('http'); // importing http module. it's a node's default modu
 	the response will be a json containing the GPS position of every bus
 
 	old url: http://dadosabertos.rio.rj.gov.br/apiTransporte/apresentacao/rest/index.cfm/obterTodasPosicoes
+	this old url does not have bus direction on it's json response
 */
 
 // setting the minimum request information that will be need to use on http.get() function
