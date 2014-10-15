@@ -1,16 +1,25 @@
-/*
-	We will perform a GET resquest, for all the busses, to dadosaberto.rio.gov.br
+/*	things to do in this code
+	1- read url's path and host and timeInterval from a file before every request sent. 
+This way, we don't need to restart the code if those things change.
+	2 - delete comments that print information that is useless for this code. Like number of bus lines.
+This kind of information is useful for someone else, somewhere else, but not here, not for this code.
+	3- keep updating comments as code changes.
 */
 
-var http = require('http'); // importing http module. it's a node's default module
 
-/*	we have to send a GET request to this url:  
+/*
+	We will perform a GET resquest, for all the busses, to dadosaberto.rio.gov.br
+
+	we have to send a GET request to this url:  
 	http://dadosabertos.rio.rj.gov.br/apiTransporte/apresentacao/rest/index.cfm/onibus
 	the response will be a json containing the GPS position, and some more information, of every bus
 
 	old url: http://dadosabertos.rio.rj.gov.br/apiTransporte/apresentacao/rest/index.cfm/obterTodasPosicoes
 	this old url does not have bus direction on its json response
 */
+
+// importing http module. it's a node's default module
+var http = require('http'); 
 
 // setting the minimum request information that will be needed to use on http.get() function
 var options = {
