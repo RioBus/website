@@ -5,12 +5,12 @@
 var http = require('http');
 
 /*	we have to send a GET request using this url:  
-	http://dadosabertos.rio.rj.gov.br/apiTransporte/apresentacao/rest/index.cfm/obterTodasPosicoes
+	http://dadosabertos.rio.rj.gov.br/apiTransporte/apresentacao/rest/index.cfm/onibus
 	the response will be a json containing the GPS position of every bus
 */
 var options = {
   host: 'dadosabertos.rio.rj.gov.br',
-  path: '/apiTransporte/apresentacao/rest/index.cfm/obterTodasPosicoes',
+  path: '/apiTransporte/apresentacao/rest/index.cfm/onibus',
   headers: {
   		'Content-Type': "application/json",
   		'Accept': "*/*",
