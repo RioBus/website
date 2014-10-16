@@ -4,7 +4,7 @@
 This way, we don't need to restart the code if those things change.
 	3- delete comments that print information that is useless for this code. number of bus lines, busses and chunks.
 This kind of information is useful for someone else, somewhere else, but not here, not for this code.
-	4- add code that will store the JSON data, from the response, in a file or database
+	4- add code that will store the JSON data, from the response, in a database
 */
 
 
@@ -19,17 +19,18 @@ This kind of information is useful for someone else, somewhere else, but not her
 	this old url does not have bus direction on its json response
 */
 
-// importing http module. it's a node's default module
-var http = require('http'); 
+
+var http = require('http'); // importing http module. it's a node's default module
+var fs = require('fs');	// importing filesystem module. Required to wrie files.
 
 // setting the minimum request information that will be needed to use on http.get() function
 var options = {
-  host: 'dadosabertos.rio.rj.gov.br',
-  path: '/apiTransporte/apresentacao/rest/index.cfm/onibus',
-  headers: {	// all the other header values don't seem to make a difference on the response we get
+	host: 'dadosabertos.rio.rj.gov.br',
+	path: '/apiTransporte/apresentacao/rest/index.cfm/onibus',
+	headers: {	// all the other header values don't seem to make a difference on the response we get
   		'Content-Type': "application/json",
   		'Accept': "*/*",
-  }
+	}
 };
 
 // function that will be called when we receive a response from dadosabertos server
@@ -40,20 +41,22 @@ var httpGETCallback = function (response) {
 	response.setEncoding('utf8'); // I don't know if it's really necessary to setEnconding to uf8... but it's here anyway
 
 	var json = ''; // variable that will hold the json received from dadosabertos server
-	var chunks = 0; // chunk counter, just to see how things work...
+	var chunksCounter = 0; // chunk counter, just to see how things work...
+
 	// registering function that will be called at every chunk received. When response triggers the 'data' event
 	response.on('data', function (chunk) {
 		json += chunk; // appending all the chunks
-		chunks++; // couting one more chunk to this response
+		chunksCounter++; // couting one more chunk to this response
 	});
 
 
 	// registering function that will be called when data is completely received. When response triggers the 'end' event
 	response.on('end', function () {
-		console.log(" --- there were " + chunks + " chunks in this response"); // printing number of chunks 
+		console.log(" --- there were " + chunksCounter + " chunks in this response"); // printing number of chunks 
 		json = JSON.parse(json); // parsing all the data, read as a string, as JSON. now, it's a javascript object
+		console.log("There are " + json['DATA'].length + " busses on-line")
 
-		var data = []; // variable that is here to represent a simple data structure
+		var data = {}; // variable that is here to represent a simple data structure
 		/*
 			data will be a hashtable/hashmap, where the key will be the bus line and the value
 			will be all the busses on this line that came in the JSON response, like this:
@@ -70,7 +73,6 @@ var httpGETCallback = function (response) {
 		*/
 
 		// loop running backwards, according to v8's engine recommendation
-		console.log("There are " + json['DATA'].length + " busses on-line")
 		for (var i = json['DATA'].length - 1; i >= 0; i--) {
 			var key = "" + json['DATA'][i][2]; // string that will be the key for the hash structure. 
 			// "" + INTEGER, parses the INTEGER to a string. javascript's fastest way parse from integer to string.
@@ -83,12 +85,23 @@ var httpGETCallback = function (response) {
 		}
 
 		/*
-			this is the part where we should store the data in a database or file.
-			by now, we just print what we get, just so we can see the server is actually responding some stuff
+			this is the part where we should store the data in a database.
+			by now, we just print some shit about the response and write a json file with the data organize by bus line
 		*/
 		var keys = Object.keys(data); // return all the keys in our simple data structure
 		// console.log(keys); // print all keys
 		console.log(" --- Number of bus lines = " + keys.length); // print the amount of keys
+
+		/*
+			writing a JSON file containing everything that is inside our data.
+			- JSON.stringify(data) turns the object into string as JSON format.
+			- JSON.stringify(data, null, 4) writes a JSON string with new lines 
+			after commas (",") and with a paragraph size of 4 spaces
+		*/
+		fs.writeFile('dataGrabbed.json', JSON.stringify(data), function (err) {
+			if (err) throw err;
+			console.log('It\'s saved!');
+		});
 	});
 }
 

@@ -1,0 +1,5 @@
+{
+   "host": "dadosabertos.rio.rj.gov.br",
+   "path": "/apiTransporte/apresentacao/rest/index.cfm/onibus",
+   "interval": 15000
+}
