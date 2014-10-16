@@ -23,15 +23,6 @@ This kind of information is useful for someone else, somewhere else, but not her
 var http = require('http'); // importing http module. it's a node's default module
 var fs = require('fs');	// importing filesystem module. Required to wrie files.
 
-// setting the minimum request information that will be needed to use on http.get() function
-var options = {
-	host: 'dadosabertos.rio.rj.gov.br',
-	path: '/apiTransporte/apresentacao/rest/index.cfm/onibus',
-	headers: {	// all the other header values don't seem to make a difference on the response we get
-  		'Content-Type': "application/json",
-  		'Accept': "*/*",
-	}
-};
 
 // function that will be called when we receive a response from dadosabertos server
 var httpGETCallback = function (response) {
@@ -106,8 +97,29 @@ var httpGETCallback = function (response) {
 	});
 }
 
+var intervalTime = 15000; // default intervalTime to be passes as argument in the setInterval function later on
+
 // saved the function that sends the request in a variable, just so I can use it again inside setInterval()
-var sendRequest = function() {
+var sendRequestAndWriteResponse = function() {
+
+	/*
+		getting the configuration of this request from a JSON file. this will help us change the server address and
+		not stop the execution. we also get the intervalTime from this file.
+		I'm making a syncronous read because the rest of the execution needs this information
+	*/
+	var config = JSON.parse(fs.readFileSync("dataGabberCondfig.json")); // reading JSON configuration file
+	intervalTime = config["intervalTime"]; // setting intervalTime from its respective field from the JSON file
+
+	// setting the minimum request information that will be needed to use on http.get() function
+	var options = {
+		host: config["host"], // came from JSON configuration file
+		path: config["path"], // came from JSON configuration file
+		headers: {	// all the other header values don't seem to make a difference on the response we get
+	  		'Content-Type': "application/json",
+	  		'Accept': "*/*", // this is probably the most important
+		}
+	};
+
 	/*
 		http.get(options, [callback]) function makes a request using method GET and calls request.end() automatically.
 		I don't think we need to keep the connection alive and we don't need a body. that's why I decided for http.get()
@@ -121,7 +133,8 @@ var sendRequest = function() {
 	});
 }
 
-sendRequest(); // sending the request
+
+sendRequestAndWriteResponse(); // sending the request
 
 /*
 	I'm using setInterval instead of setTimeout but I don't know what is going to happen if the server takes more 
@@ -130,5 +143,5 @@ sendRequest(); // sending the request
 */
  var httpGetInterval = setInterval(function () { // clearInterval(httpGetInterval) can be used to stop further executions
  	// repeating the request every 15 secondsç
- 	sendRequest();	
- }, 15000); //interval set to 15 seconds
+ 	sendRequestAndWriteResponse();	
+ }, intervalTime); //interval set to 15 seconds
