@@ -99,7 +99,8 @@ var httpGETCallback = function (response) {
 			after commas (",") and with a paragraph size of 4 spaces
 		*/
 		fs.writeFile('dataGrabbed.json', JSON.stringify(data), function (err) {
-			if (err) throw err;
+			if (err) 
+				throw err;
 			console.log('It\'s saved!');
 		});
 	});
