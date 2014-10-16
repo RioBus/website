@@ -25,7 +25,7 @@ var fs = require('fs');	// importing filesystem module. Required to wrie files.
 
 // function that will be called when we receive a response from dadosabertos server
 var httpGETCallback = function (response) {
-	console.log('STATUS: ' + response.statusCode); // printing http status code from the server'sresponse 
+	console.log('STATUS: ' + response.statusCode); // printing http status code from the server's response 
 	console.log('HEADERS: ' + JSON.stringify(response.headers)); // printing http header from the server's response
 	// these two prints are not necessary, but this is the place to check for status codes that differ from '200' 
 	response.setEncoding('utf8'); // I don't know if it's really necessary to setEnconding to uf8... but it's here anyway
