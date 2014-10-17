@@ -23,6 +23,8 @@ var http = require('http'); // importing http module. it's a node's default modu
 var fs = require('fs');	// importing filesystem module. Required to wrie files.
 
 
+var time_endOfRequest, time_endOfResponseMoment;
+
 // function that will be called when we receive a response from dadosabertos server
 var httpGETCallback = function (response) {
 	console.log('STATUS: ' + response.statusCode); // printing http status code from the server's response 
@@ -42,9 +44,12 @@ var httpGETCallback = function (response) {
 
 	// registering function that will be called when data is completely received. When response triggers the 'end' event
 	response.on('end', function () {
+		time_endOfResponseMoment = (new Date()).getTime();
+		console.log("Server took " + (time_endOfResponseMoment - time_endOfRequest) + " miliseconds")
+
 		console.log(" --- there were " + chunksCounter + " chunks in this response"); // printing number of chunks 
 		json = JSON.parse(json); // parsing all the data, read as a string, as JSON. now, it's a javascript object
-		console.log("There are " + json['DATA'].length + " busses on-line")
+		console.log("There are " + json['DATA'].length + " buss' GPS's on-line")
 
 		var data = {}; // variable that is here to represent a simple data structure
 		/*
@@ -125,6 +130,7 @@ var sendRequestAndWriteResponse = function() {
 		instead of http.request()
 	*/
 	var get = http.get(options, httpGETCallback); //sending a request
+	time_endOfRequest = (new Date()).getTime();
 
 	// registering function that will be called if our request trigger the 'error' event
 	get.on('error', function (e) { 
@@ -141,6 +147,6 @@ sendRequestAndWriteResponse(); // sending the request
 	hasn't received a response.
 */
  var httpGetInterval = setInterval(function () { // clearInterval(httpGetInterval) can be used to stop further executions
- 	// repeating the request every 15 secondsç
+ 	// repeating the request every 15 seconds
  	sendRequestAndWriteResponse();	
- }, intervalTime); //interval set to 15 seconds
+ }, intervalTime); //intervalTime comes from the JSON configuration file
