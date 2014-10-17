@@ -23,14 +23,19 @@ var http = require('http'); // importing http module. it's a node's default modu
 var fs = require('fs');	// importing filesystem module. Required to wrie files.
 
 
-var time_endOfRequest, time_endOfResponseMoment;
+var time_endOfRequest, time_endOfResponseMoment, time_endResponseHeader;
 
 // function that will be called when we receive a response from dadosabertos server
 var httpGETCallback = function (response) {
+	time_endResponseHeader = (new Date()).getTime();
+	console.log(" >>> Response header took " + (time_endResponseHeader - time_endOfRequest) + " miliseconds to arrive")
+
 	console.log('STATUS: ' + response.statusCode); // printing http status code from the server's response 
 	console.log('HEADERS: ' + JSON.stringify(response.headers)); // printing http header from the server's response
 	// these two prints are not necessary, but this is the place to check for status codes that differ from '200' 
 	response.setEncoding('utf8'); // I don't know if it's really necessary to setEnconding to uf8... but it's here anyway
+	
+
 
 	var json = ''; // variable that will hold the json received from dadosabertos server
 	var chunksCounter = 0; // chunk counter, just to see how things work...
@@ -44,10 +49,10 @@ var httpGETCallback = function (response) {
 
 	// registering function that will be called when data is completely received. When response triggers the 'end' event
 	response.on('end', function () {
-		time_endOfResponseMoment = (new Date()).getTime();
-		console.log("Server took " + (time_endOfResponseMoment - time_endOfRequest) + " miliseconds")
-
 		console.log(" --- there were " + chunksCounter + " chunks in this response"); // printing number of chunks 
+		time_endOfResponseMoment = (new Date()).getTime();
+		console.log("Server took " + (time_endOfResponseMoment - time_endOfRequest) + " miliseconds to finish the response")
+
 		json = JSON.parse(json); // parsing all the data, read as a string, as JSON. now, it's a javascript object
 		console.log("There are " + json['DATA'].length + " buss' GPS's on-line")
 
@@ -119,8 +124,12 @@ var sendRequestAndWriteResponse = function() {
 		host: config["host"], // came from JSON configuration file
 		path: config["path"], // came from JSON configuration file
 		headers: {	// all the other header values don't seem to make a difference on the response we get
-	  		'Content-Type': "application/json",
-	  		'Accept': "*/*", // this is probably the most important
+	  		// 'Content-Type': "application/json",
+	  		'Accept':"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", // this is probably the most important
+	  		'Accept-Enconding': "gzip,deflate",
+	  		'Connection': "keep-alive",
+	  		'Cache-Control': "no-cache",
+	  		'User-Agent':"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:28.0) Gecko/20100101 Firefox/28.0"
 		}
 	};
 
@@ -130,7 +139,9 @@ var sendRequestAndWriteResponse = function() {
 		instead of http.request()
 	*/
 	var get = http.get(options, httpGETCallback); //sending a request
+	console.log("Request Sent")
 	time_endOfRequest = (new Date()).getTime();
+
 
 	// registering function that will be called if our request trigger the 'error' event
 	get.on('error', function (e) { 
