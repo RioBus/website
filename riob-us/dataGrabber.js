@@ -3,7 +3,7 @@
 This way, we don't need to restart the code if those things change.
 	2- delete comments that print information that is useless for this code. number of bus lines, busses and chunks.
 This kind of information is useful for someone else, somewhere else, but not here, not for this code.
-	3- add code that will store the JSON data, from the response, in a database
+	3- add code that will store the JSON data, from the response, in a cache on memory (memcached.org)
 */
 
 
