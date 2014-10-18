@@ -19,44 +19,67 @@ This kind of information is useful for someone else, somewhere else, but not her
 */
 
 
-var http = require('http'); // importing http module. it's a node's default module
+var http = require('http'); // importing http module. it's a node's default module.
 var fs = require('fs');	// importing filesystem module. Required to wrie files.
-
+var zlib = require('zlib'); // importing zlib module that we will use to decompress the JSON compressed in gzip.
 
 var time_endOfRequest, time_endOfResponseMoment, time_endResponseHeader;
 
 // function that will be called when we receive a response from dadosabertos server
 var httpGETCallback = function (response) {
 	time_endResponseHeader = (new Date()).getTime();
-	console.log(" >>> Response header took " + (time_endResponseHeader - time_endOfRequest) + " miliseconds to arrive")
+	console.log(" >>> Response header took " + (time_endResponseHeader - time_endOfRequest) 
+					+ " miliseconds to arrive")
 
 	console.log('STATUS: ' + response.statusCode); // printing http status code from the server's response 
 	console.log('HEADERS: ' + JSON.stringify(response.headers)); // printing http header from the server's response
-	// these two prints are not necessary, but this is the place to check for status codes that differ from '200' 
-	response.setEncoding('utf8'); // I don't know if it's really necessary to setEnconding to uf8... but it's here anyway
-	
-
+	// these two prints are not necessary, but this is the place to check for status codes that differ from '200'
 
 	var json = ''; // variable that will hold the json received from dadosabertos server
 	var chunksCounter = 0; // chunk counter, just to see how things work...
 
-	// registering function that will be called at every chunk received. When response triggers the 'data' event
-	response.on('data', function (chunk) {
-		json += chunk; // appending all the chunks
+	/*	registering function that will be called if there is an error on response. When response triggers 
+		the 'data' event. I don't know which types of error it could be. 
+	*/
+	response.on('error', function(err) {
+       console.log("We've had this error: " + err);
+    });
+
+	/*	in here we need to check if the response we are getting is compressed in gzip. if it is, we have to
+		instantiate a gzip decompresser and pass all the data from response to this gzip decompresser.
+		in the end, we set the object that will be notified by the .on('data') and .on('end') events. both
+		the response and the gzip decompresser listen to these two events.
+	*/
+    var output; // the object that will listen for 'data' and 'end' events
+    if (response.headers['content-encoding'] == 'gzip') { // the server tell us which kind of thing it is sending
+      var gzip = zlib.createGunzip(); // creating the gzip decompresser
+      response.pipe(gzip); // sending data from the responses (compressed) to the decompresser
+      output = gzip; // the decompresser will listen for 'data' and 'end' events
+    } else {
+      output = response; //the response will listen for 'data' and 'end' events
+    }
+
+	/*	registering function that will be called at every chunk received by either the response
+		or the decompresser. When the 'data' event is triggered.
+	*/
+	output.on('data', function (chunk) {
+		json += chunk.toString('utf-8'); // appending all the chunks
 		chunksCounter++; // couting one more chunk to this response
 	});
 
-
-	// registering function that will be called when data is completely received. When response triggers the 'end' event
-	response.on('end', function () {
+	/*	registering function that will be called when data is completely received.
+		When the 'end' event is triggered.
+	*/
+	output.on('end', function () {
 		console.log(" --- there were " + chunksCounter + " chunks in this response"); // printing number of chunks 
-		time_endOfResponseMoment = (new Date()).getTime();
-		console.log("Server took " + (time_endOfResponseMoment - time_endOfRequest) + " miliseconds to finish the response")
+		time_endOfResponseMoment = (new Date()).getTime(); // moment when the whole response is completely received
+		console.log("Server took " + (time_endOfResponseMoment - time_endOfRequest) 
+					+ " miliseconds to finish the response");
 
 		json = JSON.parse(json); // parsing all the data, read as a string, as JSON. now, it's a javascript object
 		console.log("There are " + json['DATA'].length + " buss' GPS's on-line")
 
-		var data = {}; // variable that is here to represent a simple data structure
+		var data = {}; // object that is here to represent a simple data structure
 		/*
 			data will be a hashtable/hashmap, where the key will be the bus line and the value
 			will be all the busses on this line that came in the JSON response, like this:
@@ -67,9 +90,10 @@ var httpGETCallback = function (response) {
 			where <bus info> = ["DATAHORA","ORDEM","LINHA","LATITUDE","LONGITUDE","VELOCIDADE","DIRECAO"]
 			and <bus line> = "LINHA"
 
-			I have decided to build the structure in this way because I believe this is the way we should build our
-			future database. This structre makes the search for all the busses in a bus line, retrieve a single value
-			from one key. This is the main operation done in the project: a search for all the busses from one bus line.
+			I have decided to build the structure in this way because I believe this is the way we should build
+			our future database. This structre makes the search for all the busses in a bus line, retrieve a
+			single value from one key. This is the main operation done in the project: a search for all the busses
+			from one bus line.
 		*/
 
 		// loop running backwards, according to v8's engine recommendation
@@ -84,9 +108,9 @@ var httpGETCallback = function (response) {
 			}
 		}
 
-		/*
-			this is the part where we should store the data in a database.
-			by now, we just print some shit about the response and write a json file with the data organize by bus line
+		/*	this is the part where we should store the data in a database.
+			by now, we just print some shit about the response and write a json file with the data organized
+			by bus line.
 		*/
 		var keys = Object.keys(data); // return all the keys in our simple data structure
 		// console.log(keys); // print all keys
@@ -106,9 +130,9 @@ var httpGETCallback = function (response) {
 	});
 }
 
-var intervalTime = 15000; // default intervalTime to be passes as argument in the setInterval function later on
+var intervalTime = 15000; // default intervalTime to be passed as argument in the setInterval function later on
 
-// saved the function that sends the request in a variable, just so I can use it again inside setInterval()
+// saved the function that sends the request in this variable, just so I can use it again inside setInterval()
 var sendRequestAndWriteResponse = function() {
 
 	/*
@@ -121,16 +145,12 @@ var sendRequestAndWriteResponse = function() {
 
 	// setting the minimum request information that will be needed to use on http.get() function
 	var options = {
-		host: config["host"], // came from JSON configuration file
-		path: config["path"], // came from JSON configuration file
-		headers: {	// all the other header values don't seem to make a difference on the response we get
-	  		// 'Content-Type': "application/json",
-	  		'Accept':"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", // this is probably the most important
-	  		'Accept-Enconding': "gzip,deflate",
-	  		'Connection': "keep-alive",
-	  		'Cache-Control': "no-cache",
-	  		'User-Agent':"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:28.0) Gecko/20100101 Firefox/28.0"
-		}
+		host: config["host"], // comes from JSON configuration file
+		path: config["path"], // comes from JSON configuration file
+		headers: { // we want to get the data enconded with gzip, after lots of trial and error, this is the right order
+	  		"Accept-Encoding": "gzip", // we first say it has to be compacted with gzip
+			"Accept": "application/json" // then we say which format we want to receive
+		} // the other header parameters seems to be useless (i could be wrong)
 	};
 
 	/*
@@ -157,7 +177,7 @@ sendRequestAndWriteResponse(); // sending the request
 	time to respond than the interval takes to finish. I wouldn't like to send another request when the previous one 
 	hasn't received a response.
 */
- var httpGetInterval = setInterval(function () { // clearInterval(httpGetInterval) can be used to stop further executions
+ var httpGetIntervalCode = setInterval(function () { // clearInterval(httpGetInterval) can be used to stop further executions
  	// repeating the request every 15 seconds
  	sendRequestAndWriteResponse();	
  }, intervalTime); //intervalTime comes from the JSON configuration file
