@@ -117,6 +117,7 @@ var httpGETCallback = function (response) {
 			}
 
 			process.send({data: data}); // sending data to parent thread.
+			console.log("data object has been sent to parent process");
 
 
 			/*	this is the part where we should store the data in a database.
