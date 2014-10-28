@@ -7,7 +7,7 @@ var buildAndSendData = function () {
 	intervalTime = config["intervalTime"];
 
 	process.send({data: JSON.parse(fs.readFileSync("dataGrabbed.json"))});
-	console.log("data object has been created and sent");
+	console.log("data object has been sent to parent process");
 };
 
 buildAndSendData();
