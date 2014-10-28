@@ -7,7 +7,7 @@ This kind of information is useful for someone else, somewhere else, but not her
 */
 
 
-/*
+/*	==================
 	We will perform a GET resquest, for all the busses, to dadosaberto.rio.gov.br
 
 	we have to send a GET request to this url:  
@@ -29,13 +29,12 @@ var time_endOfRequest, time_endOfResponseMoment, time_endResponseHeader;
 	from each bus line. the bus lines in this object will be sent to the server.js thread, whenever it receives
 	am http request for a bus line.
 */
-var data = {};
 
 // function that will be called when we receive a response from dadosabertos server
 var httpGETCallback = function (response) {
 	time_endResponseHeader = (new Date()).getTime();
-	console.log(" >>> Response header took " + (time_endResponseHeader - time_endOfRequest) 
-					+ " miliseconds to arrive")
+	// console.log(" >>> Response header took " + (time_endResponseHeader - time_endOfRequest) 
+	// 				+ " miliseconds to arrive")
 
 	console.log('STATUS: ' + response.statusCode); // printing http status code from the server's response
 	if (response.statusCode == 'ECONNRESET'){
@@ -80,15 +79,15 @@ var httpGETCallback = function (response) {
 			When the 'end' event is triggered.
 		*/
 		output.on('end', function () {
-			console.log(" --- there were " + chunksCounter + " chunks in this response"); // printing number of chunks 
+			// console.log(" --- there were " + chunksCounter + " chunks in this response"); // printing number of chunks 
 			time_endOfResponseMoment = (new Date()).getTime(); // moment when the whole response is completely received
-			console.log("Server took " + (time_endOfResponseMoment - time_endOfRequest) 
-						+ " miliseconds to finish the response");
+			// console.log("Server took " + (time_endOfResponseMoment - time_endOfRequest) 
+			// 			+ " miliseconds to finish the response");
 
 			json = JSON.parse(json); // parsing all the data, read as a string, as JSON. now, it's a javascript object
-			console.log("There are " + json['DATA'].length + " bus GPS's on-line")
+			// console.log("There are " + json['DATA'].length + " bus GPS's on-line")
 
-			data = {};
+			var data = {};
 			/*
 				data will be a hashtable/hashmap, where the key will be the bus line and the value
 				will be all the busses on this line that came in the JSON response, like this:
@@ -117,13 +116,16 @@ var httpGETCallback = function (response) {
 				}
 			}
 
+			process.send({data: data}); // sending data to parent thread.
+
+
 			/*	this is the part where we should store the data in a database.
 				by now, we just print some shit about the response and write a json file with the data organized
 				by bus line.
 			*/
-			var keys = Object.keys(data); // return all the keys in our simple data structure
+			// var keys = Object.keys(data); // return all the keys in our simple data structure
 			// console.log(keys); // print all keys
-			console.log(" --- Number of bus lines = " + keys.length); // print the amount of keys
+			// console.log(" --- Number of bus lines = " + keys.length); // print the amount of keys
 
 			/*
 				writing a JSON file containing everything that is inside our data.
@@ -170,8 +172,8 @@ var sendRequestAndWriteResponse = function() {
 	*/
 	var get = http.get(options, httpGETCallback); //sending a request
 	time_endOfRequest = new Date();
-	console.log("Request Sent at " + time_endOfRequest.getHours() + ":" + time_endOfRequest.getMinutes()
-				+ " and " + time_endOfRequest.getSeconds() + " seconds");
+	// console.log("Request Sent at " + time_endOfRequest.getHours() + ":" + time_endOfRequest.getMinutes()
+	// 			+ " and " + time_endOfRequest.getSeconds() + " seconds");
 	time_endOfRequest = time_endOfRequest.getTime();
 
 
@@ -193,14 +195,3 @@ sendRequestAndWriteResponse(); // sending the request
  	// repeating the request every 15 seconds
  	sendRequestAndWriteResponse();	
  }, intervalTime); //intervalTime comes from the JSON configuration file
-
-
-/*	function that will be executed when this thread receives a message from its parent thread.
-*/
-process.on('message', function (message) {
-// it will send back to its parent, an array containing all the busses on the bus line specified in the parents message.
-	var busLine = message.busLine;
-	if (typeof data[busLine] !== 'undefined')
-		process.send(data[busLine].length); 
-	// it's expected the attribute 'busLine', as a string, inside the message object
-});
