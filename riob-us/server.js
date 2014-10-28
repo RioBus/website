@@ -29,33 +29,39 @@ var app = express(); // initializing a new express object (as if javascript were
 var data = {}; // data will hold all the bus lines collected by the dataGrabber.js thread.
 // dataGrabber will send everything collected to this server.js thread.
 child.on('message', function (message) {
-	data = message.data; // message is the object passed from the child process
+	data = message.data; // 'message' is the object passed from the child process.
 })
 
-//our first rout
-app.get('/', function (req, res) {
-	var line = Object.keys(url.parse(req.url, true).query)[0]; // getting the first string from the url request
-	// console.log("-> user searching for line: " + line);
-	if (typeof line === 'string' && line != "") { // if it is a not empty string, we can send stuff from our data
-		// seding sutff from our data, using the same form as dadosabertos server sends their json.
-		res.json({COLUMNS:["DATAHORA","ORDEM","LINHA","LATITUDE","LONGITUDE","VELOCIDADE"], 
-					DATA: data[line]}); // our data enters here.
+// we need to check weather the request comes from android, iOS or a browser.
+app.use(function (req, res, next) {
+  console.log("User-Agent: " + req.get('User-Agent'));
+  next();
+});
+
+//routing for "riob.us/?busLine" requests
+app.get('/', function (req, res, next) {
+	var busLine = Object.keys(url.parse(req.url, true).query); // getting the first string from the url request
+	if (busLine.length > 0) { // accepting one or more bus lines in the request .
+		busLine = busLine[0]; //actually, just accepting the first one.
+		// we need to learn the format used when sending more than one bus line in the same json.
+		if (typeof busLine === 'string' && busLine != "") { // if it is a not empty string, we can send stuff from our data
+			console.log("-> user searching for line: ?" + busLine);
+			// seding sutff from our data, using the same form as dadosabertos server sends their json.
+			res.json({COLUMNS:["DATAHORA","ORDEM","LINHA","LATITUDE","LONGITUDE","VELOCIDADE"], 
+						DATA: data[busLine]}); // our data enters here.
+		}
 	} else { // until now, theres nothing left to do.
-		res.send('hello world!'); 
+		res.send('Main web page should be under this url'); // sending plain text.
 	}
 })
 
-app.get('/:line', function (req, res) {
-	var line = req.param("line");
-	// console.log(line);
-	// console.log("-> user searching for line: " + line);
-	if (typeof line === 'string' && line != "") { // if it is a not empty string, we can send stuff from our data
-		// seding sutff from our data, using the same form as dadosabertos server sends their json.
-		res.json({COLUMNS:["DATAHORA","ORDEM","LINHA","LATITUDE","LONGITUDE","VELOCIDADE"], 
-					DATA: data[line]}); // our data enters here.
-	} else { // until now, theres nothing left to do.
-		res.send('hello world!'); 
-	}
+//routing for "riob.us/busLine" requests
+app.get('/:busLine', function (req, res, next) {
+	var busLine = req.param("busLine");
+	console.log("-> user seaching for line: " + busLine);
+	// seding sutff from our data, using the same form as dadosabertos server sends their json.
+	res.json({COLUMNS:["DATAHORA","ORDEM","LINHA","LATITUDE","LONGITUDE","VELOCIDADE"], 
+				DATA: data[busLine]}); // our data enters here.
 })
 
 
