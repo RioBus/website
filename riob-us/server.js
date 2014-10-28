@@ -21,12 +21,6 @@ This kind of information is useful for someone else, somewhere else, but not her
 var fork = require('child_process').fork,
 	child = fork(__dirname + "/fakeDataGrabber.js");
 
-// function that will be executed when this thread receives a message from its child thread.
-// child.on('message', function (message) {
-// 	console.log(message);
-// });
-
-
 var express = require('express'); // we are using express as our middleware. it has lots of cool functionalities.
 var url = require('url'); // we use url module to parse the url in the request, sent to us, and extract the bus line.
 
@@ -41,7 +35,20 @@ child.on('message', function (message) {
 //our first rout
 app.get('/', function (req, res) {
 	var line = Object.keys(url.parse(req.url, true).query)[0]; // getting the first string from the url request
-	console.log("-> user searching for line: " + line);
+	// console.log("-> user searching for line: " + line);
+	if (typeof line === 'string' && line != "") { // if it is a not empty string, we can send stuff from our data
+		// seding sutff from our data, using the same form as dadosabertos server sends their json.
+		res.json({COLUMNS:["DATAHORA","ORDEM","LINHA","LATITUDE","LONGITUDE","VELOCIDADE"], 
+					DATA: data[line]}); // our data enters here.
+	} else { // until now, theres nothing left to do.
+		res.send('hello world!'); 
+	}
+})
+
+app.get('/:line', function (req, res) {
+	var line = req.param("line");
+	// console.log(line);
+	// console.log("-> user searching for line: " + line);
 	if (typeof line === 'string' && line != "") { // if it is a not empty string, we can send stuff from our data
 		// seding sutff from our data, using the same form as dadosabertos server sends their json.
 		res.json({COLUMNS:["DATAHORA","ORDEM","LINHA","LATITUDE","LONGITUDE","VELOCIDADE"], 
