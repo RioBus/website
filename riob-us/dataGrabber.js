@@ -192,7 +192,7 @@ sendRequestAndWriteResponse(); // sending the request
 	time to respond than the interval takes to finish. I wouldn't like to send another request when the previous one 
 	hasn't received a response.
 */
- var httpGetIntervalCode = setInterval(function () { // clearInterval(httpGetInterval) can be used to stop further executions
+ var httpGetIntervalCode = setInterval(function () { // call to 'clearInterval(httpGetInterval)' stops further executions
  	// repeating the request every 15 seconds
  	sendRequestAndWriteResponse();	
  }, intervalTime); //intervalTime comes from the JSON configuration file
