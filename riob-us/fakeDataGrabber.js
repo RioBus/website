@@ -3,7 +3,7 @@ var fs = require('fs');
 var intervalTime = 2000;
 
 var buildAndSendData = function () {
-	var config = JSON.parse(fs.readFileSync("dataGabberCondfig.json"));
+	var config = JSON.parse(fs.readFileSync("dataGabberConfig.json"));
 	intervalTime = config["intervalTime"];
 
 	process.send({data: JSON.parse(fs.readFileSync("dataGrabbed.json"))});
