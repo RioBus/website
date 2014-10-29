@@ -1,0 +1,10 @@
+{
+	"dataGrabber": {
+		"host": "dadosabertos.rio.rj.gov.br",
+		"path": "/apiTransporte/apresentacao/rest/index.cfm/onibus",
+		"intervalTime": 15000	
+	},
+	"server": {
+		"port": 81
+	}
+}
