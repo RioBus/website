@@ -1,13 +1,14 @@
 {
   "name": "riobus-web",
-  "version": "0.1",
+  "version": "0.1.1",
   "description": "Riob.us project",
   "main": "server.js",
   "scripts": {
     "start": "node riob-us/server.js"
   },
   "dependencies": {
-    "express": "~4.10.x"
+    "express": "~4.10.x",
+    "ga": ">=0.0.2"
   },
   "engines": {
     "node": "0.10.x"
