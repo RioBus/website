@@ -38,6 +38,11 @@ app.use(function (req, res, next) {
   next();
 });
 
+//routing for "riob.us/busLine" requests
+app.get('/favicon.ico', function (req, res, next) {
+	console.log("-> User just requested our favicon.")
+})
+
 //routing for "riob.us/?busLine" requests
 app.get('/', function (req, res, next) {
 	var busLine = Object.keys(url.parse(req.url, true).query); // getting the first string from the url request
