@@ -12,14 +12,14 @@ This kind of information is useful for someone else, somewhere else, but not her
 */
 
 // we start by calling the dataGrabber.js file in another thread.
-// var fork = require('child_process').fork, // child processes are different threads that are simply new node threads.
-// 	child = fork(__dirname + "/dataGrabber.js");
+var fork = require('child_process').fork, // child processes are different threads that are simply new node threads.
+	child = fork(__dirname + "/dataGrabber.js");
 
 /* I am using this fakeDataGrabber as a temporary dataGrabber impersonation for the times when dadosabertos server
 	is down...
 */
-var fork = require('child_process').fork,
-	child = fork(__dirname + "/fakeDataGrabber.js");
+// var fork = require('child_process').fork,
+// 	child = fork(__dirname + "/fakeDataGrabber.js");
 
 var data = {}; // data will hold all the bus lines collected by the dataGrabber.js thread.
 
