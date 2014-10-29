@@ -153,7 +153,7 @@ var sendRequestAndWriteResponse = function() {
 		not stop the execution. we also get the intervalTime from this file.
 		I'm making a syncronous read because the rest of the execution needs this information
 	*/
-	var config = JSON.parse(fs.readFileSync("dataGabberCondfig.json")); // reading JSON configuration file
+	var config = JSON.parse(fs.readFileSync("dataGabberConfig.json")); // reading JSON configuration file
 	intervalTime = config["intervalTime"]; // setting intervalTime from its respective field from the JSON file
 
 	// setting the minimum request information that will be needed to use on http.get() function
