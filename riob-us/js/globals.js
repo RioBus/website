@@ -15,7 +15,7 @@ function addMarker(location, data) {
     var gpsTime = new Date(Date.parse(dataBR));
 
     var iconUrl;
-    if (Math.abs(new Date() - gpsTime)/1000/60 > 10) {
+    if (Math.abs(new Date() - gpsTime)/1000/60 > 10) { 
         iconUrl = iconBase+"bus_" + markerColors[0] + ".png";
     } else if (Math.abs(new Date() - gpsTime)/1000/60 > 5) {
         iconUrl = iconBase+"bus_" + markerColors[1] + ".png";
