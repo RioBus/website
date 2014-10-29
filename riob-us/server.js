@@ -104,6 +104,6 @@ var server = app.listen(serverPort, function () {
 
 // seding sutff from our data, using the same form as dadosabertos server sends their json.
 var sendBusLineAsJson = function (res, busLine) {
-	res.json({COLUMNS:["DATAHORA","ORDEM","LINHA","LATITUDE","LONGITUDE","VELOCIDADE, DIRECAO"], 
+	res.jsonp({COLUMNS:["DATAHORA","ORDEM","LINHA","LATITUDE","LONGITUDE","VELOCIDADE, DIRECAO"], 
 				DATA: data[busLine]}); // our data enters here.
 }
