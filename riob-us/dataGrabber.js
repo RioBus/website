@@ -36,11 +36,11 @@ var httpGETCallback = function (response) {
 	// console.log(" >>> Response header took " + (time_endResponseHeader - time_endOfRequest) 
 	// 				+ " miliseconds to arrive")
 
-	console.log('STATUS: ' + response.statusCode); // printing http status code from the server's response
+	console.log(' - STATUS: ' + response.statusCode); // printing http status code from the server's response
 	if (response.statusCode == 'ECONNRESET'){
 		console.log("server closed the connection");
 	} else {
-		console.log('HEADERS: ' + JSON.stringify(response.headers)); // printing http header from the server's response
+		console.log(' - HEADERS: ' + JSON.stringify(response.headers)); // printing http header from the server's response
 		// these two prints are not necessary, but this is the place to check for status codes that differ from '200'
 
 		var json = ''; // variable that will hold the json received from dadosabertos server
@@ -50,7 +50,7 @@ var httpGETCallback = function (response) {
 			the 'data' event. I don't know which types of error it could be. 
 		*/
 		response.on('error', function(err) {
-		   console.log("We've had this error: " + err);
+		   console.log(" - We've had this error: " + err);
 		});
 
 		/*	in here we need to check if the response we are getting is compressed in gzip. if it is, we have to
@@ -117,7 +117,7 @@ var httpGETCallback = function (response) {
 			}
 
 			process.send({data: data}); // sending data to parent thread.
-			console.log("data object has been sent to parent process");
+			// console.log(" - data object has been sent to parent process");
 
 
 			/*	this is the part where we should store the data in a database.
