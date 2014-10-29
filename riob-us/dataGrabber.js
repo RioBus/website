@@ -20,10 +20,8 @@ This kind of information is useful for someone else, somewhere else, but not her
 
 
 var http = require('http'); // importing http module. it's a node's default module.
-var fs = require('fs');	// importing filesystem module. Required to wrie files.
+var fs = require('fs');	// importing filesystem module. using fs to read riobus-config.json
 var zlib = require('zlib'); // importing zlib module that we will use to decompress the JSON compressed in gzip.
-
-var time_endOfRequest, time_endOfResponseMoment, time_endResponseHeader;
 
 /*	object that is here to represent a simple data structure. this object will hold all the busses
 	from each bus line. the bus lines in this object will be sent to the server.js thread, whenever it receives
@@ -32,19 +30,13 @@ var time_endOfRequest, time_endOfResponseMoment, time_endResponseHeader;
 
 // function that will be called when we receive a response from dadosabertos server
 var httpGETCallback = function (response) {
-	time_endResponseHeader = (new Date()).getTime();
-	// console.log(" >>> Response header took " + (time_endResponseHeader - time_endOfRequest) 
-	// 				+ " miliseconds to arrive")
-
-	console.log(' - STATUS: ' + response.statusCode); // printing http status code from the server's response
-	if (response.statusCode == 'ECONNRESET'){
+	console.log(' - STATUS: ' + response.statusCode); // printing http status code from the server's response.
+	if (response.statusCode == 'ECONNRESET'){ // statusCode for when remote server close the connection on us.
 		console.log("server closed the connection");
 	} else {
-		console.log(' - HEADERS: ' + JSON.stringify(response.headers)); // printing http header from the server's response
-		// these two prints are not necessary, but this is the place to check for status codes that differ from '200'
+		// console.log(' - HEADERS: ' + JSON.stringify(response.headers)); // printing http header from the server's response
 
 		var json = ''; // variable that will hold the json received from dadosabertos server
-		var chunksCounter = 0; // chunk counter, just to see how things work...
 
 		/*	registering function that will be called if there is an error on response. When response triggers 
 			the 'data' event. I don't know which types of error it could be. 
@@ -72,20 +64,13 @@ var httpGETCallback = function (response) {
 		*/
 		output.on('data', function (chunk) {
 			json += chunk.toString('utf-8'); // appending all the chunks
-			chunksCounter++; // couting one more chunk to this response
 		});
 
 		/*	registering function that will be called when data is completely received.
 			When the 'end' event is triggered.
 		*/
 		output.on('end', function () {
-			// console.log(" --- there were " + chunksCounter + " chunks in this response"); // printing number of chunks 
-			time_endOfResponseMoment = (new Date()).getTime(); // moment when the whole response is completely received
-			// console.log("Server took " + (time_endOfResponseMoment - time_endOfRequest) 
-			// 			+ " miliseconds to finish the response");
-
 			json = JSON.parse(json); // parsing all the data, read as a string, as JSON. now, it's a javascript object
-			// console.log("There are " + json['DATA'].length + " bus GPS's on-line")
 
 			var data = {};
 			/*
@@ -117,7 +102,6 @@ var httpGETCallback = function (response) {
 			}
 
 			process.send({data: data}); // sending data to parent thread.
-			// console.log(" - data object has been sent to parent process");
 
 
 			/*	this is the part where we should store the data in a database.
@@ -153,13 +137,13 @@ var sendRequestAndWriteResponse = function() {
 		not stop the execution. we also get the intervalTime from this file.
 		I'm making a syncronous read because the rest of the execution needs this information
 	*/
-	var config = JSON.parse(fs.readFileSync("dataGabberConfig.json")); // reading JSON configuration file
-	intervalTime = config["intervalTime"]; // setting intervalTime from its respective field from the JSON file
+	var config = JSON.parse(fs.readFileSync("riobus-config.json")).dataGrabber; // reading JSON configuration file
+	intervalTime = config.intervalTime; // setting intervalTime from its respective field from the JSON file
 
 	// setting the minimum request information that will be needed to use on http.get() function
 	var options = {
-		host: config["host"], // comes from JSON configuration file
-		path: config["path"], // comes from JSON configuration file
+		host: config.host, // comes from JSON configuration file
+		path: config.path, // comes from JSON configuration file
 		headers: { // we want to get the data enconded with gzip, after lots of trial and error, this is the right order
 	  		"Accept-Encoding": "gzip", // we first say it has to be compacted with gzip
 			"Accept": "application/json" // then we say which format we want to receive
@@ -172,10 +156,6 @@ var sendRequestAndWriteResponse = function() {
 		instead of http.request()
 	*/
 	var get = http.get(options, httpGETCallback); //sending a request
-	time_endOfRequest = new Date();
-	// console.log("Request Sent at " + time_endOfRequest.getHours() + ":" + time_endOfRequest.getMinutes()
-	// 			+ " and " + time_endOfRequest.getSeconds() + " seconds");
-	time_endOfRequest = time_endOfRequest.getTime();
 
 
 	// registering function that will be called if our request trigger the 'error' event
