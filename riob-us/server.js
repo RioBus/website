@@ -31,6 +31,7 @@ child.on('message', function (message) {
 
 var express = require('express'); // we are using express as our middleware. it has lots of cool functionalities.
 var url = require('url'); // we use url module to parse the url in the request, sent to us, and extract the bus line.
+var fs = require('fs'); // using fs to read riobus-config.json
 
 var app = express(); // initializing a new express object (as if javascript were object oriented).
 
@@ -42,7 +43,7 @@ app.use(function (req, res, next) {
 
 //routing for "riob.us/busLine" requests
 app.get('/favicon.ico', function (req, res, next) {
-	console.log("-> User just requested our favicon.")
+	console.log("-> User just requested our favicon.ico")
 })
 
 //routing for "riob.us/?busLine" requests
@@ -51,7 +52,7 @@ app.get('/', function (req, res, next) {
 	var platformType = req.query.s; // getting the number sent by the platform that should identify it (android, iOS...).
 	if (Object.keys(req.query).length > 0) { // checking if there are any parameters in the request.
 		if (typeof busLine === 'string') { // checking if busLine exists.
-			console.log("-> user searching for line ?" + busLine + ", from plataform type " + platformType);
+			console.log("-> user searching for line " + busLine + ", from plataform type " + platformType);
 			sendBusLineAsJson(res, busLine); // we define this function to reuse the json format to be sent.
 
 			/*code sample of google analytics usage with ga library*/
@@ -87,9 +88,11 @@ app.get('/:busLine', function (req, res, next) {
 	sendBusLineAsJson(res, busLine); // we define this function to reuse the json format to be sent.
 })
 
+// reading the port to which our server should listen, from our JSON configuration file
+var serverPort = JSON.parse(fs.readFileSync("riobus-config.json")).server.port;
 
 // starting our server, using our express instance, on port 8080
-var server = app.listen(8080, function () {
+var server = app.listen(serverPort, function () {
 
 	var host = server.address().address;
 	var port = server.address().port;
