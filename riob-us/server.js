@@ -12,14 +12,14 @@ This kind of information is useful for someone else, somewhere else, but not her
 */
 
 // we start by calling the dataGrabber.js file in another thread.
-// var fork = require('child_process').fork, // child processes are different threads that are simply new node threads.
-// 	child = fork(__dirname + "/dataGrabber.js");
+var fork = require('child_process').fork, // child processes are different threads that are simply new node threads.
+	child = fork(__dirname + "/dataGrabber.js");
 
 /* I am using this fakeDataGrabber as a temporary dataGrabber impersonation for the times when dadosabertos server
 	is down...
 */
-var fork = require('child_process').fork,
-	child = fork(__dirname + "/fakeDataGrabber.js");
+// var fork = require('child_process').fork,
+// 	child = fork(__dirname + "/fakeDataGrabber.js");
 
 var express = require('express'); // we are using express as our middleware. it has lots of cool functionalities.
 var url = require('url'); // we use url module to parse the url in the request, sent to us, and extract the bus line.
@@ -34,7 +34,7 @@ child.on('message', function (message) {
 
 // we need to check weather the request comes from android, iOS or a browser.
 app.use(function (req, res, next) {
-  console.log("User-Agent: " + req.get('User-Agent'));
+  console.log(" - User-Agent: " + req.get('User-Agent'));
   next();
 });
 
