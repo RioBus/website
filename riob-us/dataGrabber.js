@@ -70,7 +70,18 @@ var httpGETCallback = function (response) {
 			When the 'end' event is triggered.
 		*/
 		output.on('end', function () {
-			json = JSON.parse(json); // parsing all the data, read as a string, as JSON. now, it's a javascript object
+			try {
+				json = JSON.parse(json); // parsing all the data, read as a string, as JSON. now, it's a javascript object
+			} catch (er) {
+				if (er instanceof SyntaxError) {
+					console.log(" - we've had a syntax error while parsing json file from dadosabertos.",
+								"data will be an empty object");
+				} else {
+					console.log(err.stack)			
+				}
+			} finally {
+				json = {}
+			}
 
 			var data = {};
 			/*
@@ -137,7 +148,7 @@ var sendRequestAndWriteResponse = function() {
 		not stop the execution. we also get the intervalTime from this file.
 		I'm making a syncronous read because the rest of the execution needs this information
 	*/
-	var config = JSON.parse(fs.readFileSync("riobus-config.json")).dataGrabber; // reading JSON configuration file
+	var config = JSON.parse(fs.readFileSync(__dirname + "/riobus-config.json")).dataGrabber; // reading JSON configuration file
 	intervalTime = config.intervalTime; // setting intervalTime from its respective field from the JSON file
 
 	// setting the minimum request information that will be needed to use on http.get() function
@@ -162,6 +173,7 @@ var sendRequestAndWriteResponse = function() {
 	get.on('error', function (e) { 
 		console.log('problem with request: ' + e.message); //printing error message
 	});
+
 }
 
 
