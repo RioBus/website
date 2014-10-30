@@ -72,6 +72,59 @@ var httpGETCallback = function (response) {
 		output.on('end', function () {
 			try {
 				json = JSON.parse(json); // parsing all the data, read as a string, as JSON. now, it's a javascript object
+
+				var data = {};
+				/*
+					data will be a hashtable/hashmap, where the key will be the bus line and the value
+					will be all the busses on this line that came in the JSON response, like this:
+
+					key 			: 	value 
+					"<bus line>"	: 	[<bus info>, <bus info>, ...]
+
+					where <bus info> = ["DATAHORA","ORDEM","LINHA","LATITUDE","LONGITUDE","VELOCIDADE","DIRECAO"]
+					and <bus line> = "LINHA"
+
+					I have decided to build the structure in this way because I believe this is the way we should build
+					our future database. This structre makes the search for all the busses in a bus line, retrieve a
+					single value from one key. This is the main operation done in the project: a search for all the busses
+					from one bus line.
+				*/
+
+				// loop running backwards, according to v8's engine recommendation
+				for (var i = json['DATA'].length - 1; i >= 0; i--) {
+					var key = "" + json['DATA'][i][2]; // string that will be the key for the hashmap structure. 
+					// "" + INTEGER, parses the INTEGER to a string. javascript's fastest way parse from integer to string.
+					if (data[key]){ // if key already exists in data structure
+						data[key].push(json['DATA'][i]); // add this bus to this key (add bus to its respective line)
+					} else { // if key doesn't exist
+						data[key] = []; // instantiate an array in the key
+						data[key].push(json['DATA'][i]); // add this bus to this key (add bus to its respective line)
+					}
+				}
+
+				process.send({data: data}); // sending data to parent thread.
+
+
+				/*	this is the part where we should store the data in a database.
+					by now, we just print some shit about the response and write a json file with the data organized
+					by bus line.
+				*/
+				// var keys = Object.keys(data); // return all the keys in our simple data structure
+				// console.log(keys); // print all keys
+				// console.log(" --- Number of bus lines = " + keys.length); // print the amount of keys
+
+				/*
+					writing a JSON file containing everything that is inside our data.
+					- JSON.stringify(data) turns the object into string as JSON format.
+					- JSON.stringify(data, null, 4) writes a JSON string with new lines 
+					after commas (",") and with a paragraph size of 4 spaces
+				*/
+				// fs.writeFile('dataGrabbed.json', JSON.stringify(data), function (err) {
+				// 	if (err) 
+				// 		throw err;
+				// 	console.log('It\'s saved!');
+				// });
+				
 			} catch (er) {
 				if (er instanceof SyntaxError) {
 					console.log(" - we've had a syntax error while parsing json file from dadosabertos.",
@@ -79,61 +132,7 @@ var httpGETCallback = function (response) {
 				} else {
 					console.log(err.stack)			
 				}
-			} finally {
-				json = {}
 			}
-
-			var data = {};
-			/*
-				data will be a hashtable/hashmap, where the key will be the bus line and the value
-				will be all the busses on this line that came in the JSON response, like this:
-
-				key 			: 	value 
-				"<bus line>"	: 	[<bus info>, <bus info>, ...]
-
-				where <bus info> = ["DATAHORA","ORDEM","LINHA","LATITUDE","LONGITUDE","VELOCIDADE","DIRECAO"]
-				and <bus line> = "LINHA"
-
-				I have decided to build the structure in this way because I believe this is the way we should build
-				our future database. This structre makes the search for all the busses in a bus line, retrieve a
-				single value from one key. This is the main operation done in the project: a search for all the busses
-				from one bus line.
-			*/
-
-			// loop running backwards, according to v8's engine recommendation
-			for (var i = json['DATA'].length - 1; i >= 0; i--) {
-				var key = "" + json['DATA'][i][2]; // string that will be the key for the hashmap structure. 
-				// "" + INTEGER, parses the INTEGER to a string. javascript's fastest way parse from integer to string.
-				if (data[key]){ // if key already exists in data structure
-					data[key].push(json['DATA'][i]); // add this bus to this key (add bus to its respective line)
-				} else { // if key doesn't exist
-					data[key] = []; // instantiate an array in the key
-					data[key].push(json['DATA'][i]); // add this bus to this key (add bus to its respective line)
-				}
-			}
-
-			process.send({data: data}); // sending data to parent thread.
-
-
-			/*	this is the part where we should store the data in a database.
-				by now, we just print some shit about the response and write a json file with the data organized
-				by bus line.
-			*/
-			// var keys = Object.keys(data); // return all the keys in our simple data structure
-			// console.log(keys); // print all keys
-			// console.log(" --- Number of bus lines = " + keys.length); // print the amount of keys
-
-			/*
-				writing a JSON file containing everything that is inside our data.
-				- JSON.stringify(data) turns the object into string as JSON format.
-				- JSON.stringify(data, null, 4) writes a JSON string with new lines 
-				after commas (",") and with a paragraph size of 4 spaces
-			*/
-			// fs.writeFile('dataGrabbed.json', JSON.stringify(data), function (err) {
-			// 	if (err) 
-			// 		throw err;
-			// 	console.log('It\'s saved!');
-			// });
 		});
 	}
 }
