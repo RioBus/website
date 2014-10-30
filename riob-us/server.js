@@ -21,7 +21,7 @@ var fork = require('child_process').fork, // child processes are different threa
 // var fork = require('child_process').fork,
 // 	child = fork(__dirname + "/fakeDataGrabber.js");
 
-var data = {}; // data will hold all the bus lines collected by the dataGrabber.js thread.
+var data = {a: "no busses yet"}; // data will hold all the bus lines collected by the dataGrabber.js thread.
 
 // dataGrabber will send everything collected to this server.js thread.
 child.on('message', function (message) {
@@ -89,7 +89,7 @@ app.get('/:busLine', function (req, res, next) {
 })
 
 // reading the port to which our server should listen, from our JSON configuration file
-var serverPort = JSON.parse(fs.readFileSync("riobus-config.json")).server.port;
+var serverPort = JSON.parse(fs.readFileSync(__dirname + "/riobus-config.json")).server.port;
 
 // starting our server, using our express instance, on port 8080
 var server = app.listen(serverPort, function () {
