@@ -30,11 +30,11 @@ var zlib = require('zlib'); // importing zlib module that we will use to decompr
 
 // function that will be called when we receive a response from dadosabertos server
 var httpGETCallback = function (response) {
-	console.log(' - STATUS: ' + response.statusCode); // printing http status code from the server's response.
 	if (response.statusCode == 'ECONNRESET'){ // statusCode for when remote server close the connection on us.
-		console.log("server closed the connection");
-	} else {
-		// console.log(' - HEADERS: ' + JSON.stringify(response.headers)); // printing http header from the server's response
+		console.log("Dadosabertos server closed the connection");
+	} else if (response.statusCode == 200) {
+		// printing http header from the server's response
+		// console.log(' - HEADERS: ' + JSON.stringify(response.headers));
 
 		var json = ''; // variable that will hold the json received from dadosabertos server
 
@@ -42,7 +42,7 @@ var httpGETCallback = function (response) {
 			the 'data' event. I don't know which types of error it could be. 
 		*/
 		response.on('error', function(err) {
-		   console.log(" - We've had this error: " + err);
+		   console.log(" - We've had this error on dadosabertos response: " + err);
 		});
 
 		/*	in here we need to check if the response we are getting is compressed in gzip. if it is, we have to
@@ -134,6 +134,8 @@ var httpGETCallback = function (response) {
 				}
 			}
 		});
+	} else {
+		console.log(" - Dadosabertos responded with statuscode: " + response.statusCode);
 	}
 }
 
@@ -147,7 +149,8 @@ var sendRequestAndWriteResponse = function() {
 		not stop the execution. we also get the intervalTime from this file.
 		I'm making a syncronous read because the rest of the execution needs this information
 	*/
-	var config = JSON.parse(fs.readFileSync(__dirname + "/riobus-config.json")).dataGrabber; // reading JSON configuration file
+	// reading JSON configuration file
+	var config = JSON.parse(fs.readFileSync(__dirname + "/riobus-config.json")).dataGrabber;
 	intervalTime = config.intervalTime; // setting intervalTime from its respective field from the JSON file
 
 	// setting the minimum request information that will be needed to use on http.get() function
