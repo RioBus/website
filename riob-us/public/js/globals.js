@@ -109,7 +109,7 @@ function findBus(clicked){
     currentLine = $("#busLine").val();
 	history.pushState(null, "Rio Bus - " + currentLine, "?" + currentLine);
     var line = currentLine + "_" + loadTimeout;
-    $.getJSON("/proxy.php",{
+    $.getJSON("http://riob.us/proxy.php",{
             s: "1", 
             linha: currentLine,
             rand: Math.round(Math.random()*999999)
