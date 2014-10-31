@@ -16,6 +16,6 @@ Para rodá-lo,
 	</li>
 	<li>abra o terminal e entre no diretório 'riob-us'.</li>
 		<code>$ cd riobus-web/riob-us</code>
-	<li>chame o node passando o 'dataGraber.js' como argumento.</li>
-		<code>$ node dataGraber.js</code>
+	<li>chame o node passando o 'server.js' como argumento.</li>
+		<code>$ node server.js</code>
 </ol>
