@@ -31,29 +31,25 @@ child.on('message', function (message) {
 
 var express = require('express'); // we are using express as our middleware. it has lots of cool functionalities.
 var url = require('url'); // we use url module to parse the url in the request, sent to us, and extract the bus line.
-var fs = require('fs'); // using fs to read riobus-config.json
+var fs = require('fs'); // using fs to read riobus-config.json.
+var compression = require('compression') // compression middleware to compress files before sending on response.
 
 var app = express(); // initializing a new express object (as if javascript were object oriented).
 
-// we need to check weather the request comes from android, iOS or a browser.
-app.use(function (req, res, next) {
-	// console.log(url.parse(req.url, true));
-	next();
-});
+app.use(compression()); // compress with gzip all the contents that will be sent.
 
-//routing for "riob.us/busLine" requests
-app.get('/favicon.ico', function (req, res, next) {
-	console.log("-> User just requested our favicon.ico")
-})
-
-//routing for "riob.us/?busLine" requests
+//routing for "riob.us/" requests
 app.get('/', function (req, res, next) {
-	var busLine = req.query.linha; // getting the first string from the url request.
-	var platformType = req.query.s; // getting the number sent by the platform that should identify it (android, iOS...).
+	// if we can find the 'linha' and 's' paramaters in the request url, it means the request is searching for a bus line.
 	if (Object.keys(req.query).length > 0) { // checking if there are any parameters in the request.
-		if (typeof busLine === 'string') { // checking if busLine exists.
-			console.log("-> user searching for line " + busLine + ", from plataform type " + platformType);
-			sendBusLineAsJson(res, busLine); // we define this function to reuse the json format to be sent.
+		// getting the first string from the url request.
+		var busLine = req.query.linha;
+		// getting the number sent by the platform that should identify it (android, iOS...).
+		var platformType = req.query.s;
+
+		if (typeof busLine === 'string') { // checking if busLine paramater exists.
+			//send json with the respective bus line information
+			sendBusLineAsJson(res, busLine); // function defined because it is being reused by the rest api
 
 			/*code sample of google analytics usage with ga library*/
 			// var ua = "UA-49628280-3";
@@ -73,25 +69,30 @@ app.get('/', function (req, res, next) {
 
 				} else if (platformType == 3) { // legado. i don't know what legado we have.
 
+				} else {
+
 				}
 			}	
 		}
-	} else { // until now, theres nothing left to do.
-		res.send('Main web page should be under this url'); // sending plain text.
+	} else { // request has no paramaters. we have to send the index.html file.
+		next() // as we are using express.static middleware, we can here move to the next middleware
 	}
 })
+
+/*	using express.static middleware to serve static files. it only serves existing files and calls next() 
+	when file is not found. */
+app.use(express.static(__dirname + '/public')); // setting express.static to use '/public' as the root static folder.
 
 //routing for "riob.us/busLine" requests
 app.get('/:busLine', function (req, res, next) {
 	var busLine = req.param("busLine");
-	console.log("-> user seaching for line: " + busLine);
-	sendBusLineAsJson(res, busLine); // we define this function to reuse the json format to be sent.
+	sendBusLineAsJson(res, busLine); // function defined because it is also being used in the queryed url
 })
 
-// reading the port to which our server should listen, from our JSON configuration file
+// reading the port to which our server should listen, from our JSON configuration file.
 var serverPort = JSON.parse(fs.readFileSync(__dirname + "/riobus-config.json")).server.port;
 
-// starting our server, using our express instance, on port 8080
+// starting our server, using our express instance, on port specified by our JSON configuration file.
 var server = app.listen(serverPort, function () {
 
 	var host = server.address().address;
