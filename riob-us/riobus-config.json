@@ -5,7 +5,8 @@
 		"intervalTime": 15000
 	},
 	"server": {
-		"port": 81
+		"port": 81,
+		"maxBusLines": 10
 	},
 	"dataReporter": {
 		"intervalTime": 180000,

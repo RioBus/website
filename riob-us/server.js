@@ -89,10 +89,10 @@ app.get('/:busLine', function (req, res, next) {
 })
 
 // reading the port to which our server should listen, from our JSON configuration file.
-var serverPort = JSON.parse(fs.readFileSync(__dirname + "/riobus-config.json")).server.port;
+var configServer = JSON.parse(fs.readFileSync(__dirname + "/riobus-config.json")).server;
 
 // starting our server, using our express instance, on port specified by our JSON configuration file.
-var server = app.listen(serverPort, function () {
+var server = app.listen(configServer.port, function () {
 
 	var host = server.address().address;
 	var port = server.address().port;
@@ -104,25 +104,28 @@ var server = app.listen(serverPort, function () {
 
 // seding sutff from our data, using the same form as dadosabertos server sends their json.
 var sendBusLineAsJson = function (res, busLine) {
-	var busLines = busLine.split(","); // requests can query for more than 1 bus line like this: 'linha="213,341,485"'.
-	if (busLines.length < 11) // we will only accept 10 bus lines in the query.
-		busLines.slice(0,10); // if there's more than 10, we will get the 10 first bus lines.
-	// we need to remove duplicate bus lines.
-	var a = {} // creating an object to work as a hashmap structure.
+
+	// requests can query for more than 1 bus line like this: 'linha="213,341,485"'.
+	var busLines = busLine.split(","); // returns an array with the string splited by commas (",").
+	// we will only accept 10 bus lines in the query. configurable on our config JSON file.
+	if (busLines.length > configServer.maxBusLines) // if there's more than 10.
+		busLines = busLines.slice(0,configServer.maxBusLines); // we will get the 10 first bus lines.
+
+	// we need to remove duplicates.
+	var hash = {} // creating an object to work as a hashmap structure.
 	for (var i = busLines.length - 1; i >= 0; i--) { // for each bus lines.
-		if (!a[busLines[i]]) // if this bus lines string is a non existing attribute inside our object.
-			a[busLines[i]] = true; // create this attribute in it, with a simple boolean (could be anything)
+		if (!hash[busLines[i]]) // if this bus lines string is a non existing attribute inside our object.
+			hash[busLines[i]] = true; // create this attribute in it, with a simple boolean (could be anything)
 	};
-	busLines = Object.keys(a); // now get just the attribute names of the object (the keys of the hash).
-	var ret = [] // building return that will be sent on response.
+	busLines = Object.keys(hash); // now get just the attribute names of the object (the keys of the hash).
+	var returnData = [] // building return that will be sent on response.
 	for (var i = busLines.length - 1; i >= 0; i--) { // for each bus line in the query.
 		var busses = data[busLines[i]]; // get the array containing all busses in it.
 		if (busses) // if this array exists.
-			ret = ret.concat(busses); // oncactenate with what's inside the return variable.
+			returnData = returnData.concat(busses); // oncactenate with what's inside the return variable.
 	};
 	// send json on response.
 	res.jsonp({COLUMNS:["DATAHORA","ORDEM","LINHA","LATITUDE","LONGITUDE","VELOCIDADE, DIRECAO"], 
-				DATA: ret, // our return data enters here.
+				DATA: returnData, // our return data enters here.
 				LASTUPDATE: data.lastUpdate});
-
 }
