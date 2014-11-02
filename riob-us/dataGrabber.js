@@ -1,9 +1,5 @@
 /*	things to do in this code
 	1- keep updating comments as code changes.
-This way, we don't need to restart the code if those things change.
-	2- delete comments that print information that is useless for this code. number of bus lines, busses and chunks.
-This kind of information is useful for someone else, somewhere else, but not here, not for this code.
-	3- add code that will store the JSON data, from the response, in a cache on memory (memcached.org)
 */
 
 
@@ -23,16 +19,9 @@ var http = require('http'); // importing http module. it's a node's default modu
 var fs = require('fs');	// importing filesystem module. using fs to read riobus-config.json
 var zlib = require('zlib'); // importing zlib module that we will use to decompress the JSON compressed in gzip.
 
-/*	object that is here to represent a simple data structure. this object will hold all the busses
-	from each bus line. the bus lines in this object will be sent to the server.js thread, whenever it receives
-	am http request for a bus line.
-*/
-
 // function that will be called when we receive a response from dadosabertos server
 var httpGETCallback = function (response) {
-	if (response.statusCode == 'ECONNRESET'){ // statusCode for when remote server close the connection on us.
-		console.log("Dadosabertos server closed the connection");
-	} else if (response.statusCode == 200) {
+	if (response.statusCode == 200) {
 		// printing http header from the server's response
 		// console.log(' - HEADERS: ' + JSON.stringify(response.headers));
 
@@ -45,7 +34,7 @@ var httpGETCallback = function (response) {
 		   console.log(" - We've had this error on dadosabertos response: " + err);
 		});
 
-		/*	in here we need to check if the response we are getting is compressed in gzip. if it is, we have to
+		/*	in here we need to check if the response we are getting is compressed with gzip. if it is, we have to
 			instantiate a gzip decompresser and pass all the data from response to this gzip decompresser.
 			in the end, we set the object that will be notified by the .on('data') and .on('end') events. both
 			the response and the gzip decompresser listen to these two events.
@@ -71,18 +60,54 @@ var httpGETCallback = function (response) {
 		*/
 		output.on('end', function () {
 			try {
-				json = JSON.parse(json); // parsing all the data, read as a string, as JSON. now, it's a javascript object
+				// parsing all the data, read as a string, as JSON. now, it's a javascript object
+				json = JSON.parse(json);
+			} catch (err) {
+				json = null; // if there was an error when parsing the json, it is invalid to our purpose.
+				if (err instanceof SyntaxError) {
+					console.log(" - we've had a syntax error while parsing json file from dadosabertos.",
+								"data will be an empty object");
+				} else {
+					console.log(err.message);
+					console.log(err.stack);		
+				}
+			}
 
-				var data = {};
+			/*	If we received a message saying that our request was good but nothing has been found, we
+				will not consider it as a valid response. because it means their service could not provide
+				any data, which they should. As we are quering for everything, something must be provided.
+			*/
+			// checking if dadosabertos server gave us just a message telling us that nothing were found.
+			// "COLUMNS" attribute change to an array with size 1 and its content is'MENSAGEM'.
+			if (json['COLUMNS'][0] === "MENSAGEM") {
+				// we don't care about the message. this is the only message in the whole service.
+				console.log(" - Dadosabertos said:", json['DATA'][0][0]) // message comes inside 'DATA', nested 2 times.
+				json = null; // it means this json is invalid to our purpose.
+			}
+
+			if (json !== null) { // if json is valid, keep going.
+				/*	object 'data' is here to represent a simple data structure. this object will hold all the busses
+					from each bus line. the bus lines in this object will be sent to the server.js thread, whenever
+					it receives am http request for a bus line.
+				*/
+				var data = {lastUpdate: (new Date()).toLocaleString()};
+				/*	setting a new time at every reponse with status code 200. transforming date to a 
+					readable time localized string.*/
+
 				/*
 					data will be a hashtable/hashmap, where the key will be the bus line and the value
 					will be all the busses on this line that came in the JSON response, like this:
 
-					key 			: 	value 
-					"<bus line>"	: 	[<bus info>, <bus info>, ...]
+					key 			: 	value
+					lastUpdate		: 	"Sun Nov 02 2014 16:26:12 GMT-0200 (BRST)", 
+					"<bus line>"	: 	[<bus info>, <bus info>, ...],
+					"<bus line>"	: 	[<bus info>, <bus info>, ...],
+					"<bus line>"	: 	[<bus info>, <bus info>, ...],
 
-					where <bus info> = ["DATAHORA","ORDEM","LINHA","LATITUDE","LONGITUDE","VELOCIDADE","DIRECAO"]
-					and <bus line> = "LINHA"
+					where :
+					lastUpdate is a date that is set at every sucessfull response we get.
+					<bus info> = ["DATAHORA","ORDEM","LINHA","LATITUDE","LONGITUDE","VELOCIDADE","DIRECAO"]
+					<bus line> = "LINHA"
 
 					I have decided to build the structure in this way because I believe this is the way we should build
 					our future database. This structre makes the search for all the busses in a bus line, retrieve a
@@ -90,20 +115,27 @@ var httpGETCallback = function (response) {
 					from one bus line.
 				*/
 
-				// loop running backwards, according to v8's engine recommendation
+				// loop running backwards, according to google's recommendation for v8 engine.
 				for (var i = json['DATA'].length - 1; i >= 0; i--) {
-					var key = "" + json['DATA'][i][2]; // string that will be the key for the hashmap structure. 
-					// "" + INTEGER, parses the INTEGER to a string. javascript's fastest way parse from integer to string.
+					var bus = json['DATA'][i];
+					var key = "" + bus[2]; // string that will be the key for the hashmap structure. 
+					// "" + NUMBER, parses the NUMBER to a string. javascript's fastest way to parse number to string.
 					if (data[key]){ // if key already exists in data structure
-						data[key].push(json['DATA'][i]); // add this bus to this key (add bus to its respective line)
+						data[key].push(bus); // add this bus to this key (add bus to its respective line).
 					} else { // if key doesn't exist
-						data[key] = []; // instantiate an array in the key
-						data[key].push(json['DATA'][i]); // add this bus to this key (add bus to its respective line)
+						data[key] = [bus]; // instantiate an array in the key with this bus inside it.
 					}
 				}
 
-				process.send({data: data}); // sending data to parent thread.
+				/*	printing the amount of busses in each bus line. it doesn't mean that there are this amount of
+					in each bus line right now, because the time and date coul be saying that some busses were last
+					seen a long time ago.
+				*/ 
+				// for (key in data){
+				// 	console.log(key, "-",data[key].length);
+				// }
 
+				process.send({data: data}); // sending data to parent thread.
 
 				/*	this is the part where we should store the data in a database.
 					by now, we just print some shit about the response and write a json file with the data organized
@@ -124,25 +156,23 @@ var httpGETCallback = function (response) {
 				// 		throw err;
 				// 	console.log('It\'s saved!');
 				// });
-				
-			} catch (er) {
-				if (er instanceof SyntaxError) {
-					console.log(" - we've had a syntax error while parsing json file from dadosabertos.",
-								"data will be an empty object");
-				} else {
-					console.log(err.stack)			
-				}
 			}
 		});
+	} else if (response.statusCode == 'ECONNRESET') { // statusCode for when remote server close the connection on us.
+		console.log(" - Dadosabertos server closed the connection");
+	} else if (response.statusCode == 503) { // statusCode for when remote server is unavailable.
+		console.log(" - Dadosabertos server was unavailable, code:", response.statusCode);
+	} else if (response.statusCode == 404) { // statusCode for when remote server can't find request (not found).
+		console.log(" - Dadosabertos server could not find anything matching our request, code:", response.statusCode);
 	} else {
-		console.log(" - Dadosabertos responded with statuscode: " + response.statusCode);
+		console.log(" - Dadosabertos responded with statuscode:", response.statusCode);
 	}
 }
 
 var intervalTime = 15000; // default intervalTime to be passed as argument in the setInterval function later on
 
 // saved the function that sends the request in this variable, just so I can use it again inside setInterval()
-var sendRequestAndWriteResponse = function() {
+var sendRequestAndGrabData = function() {
 
 	/*
 		getting the configuration of this request from a JSON file. this will help us change the server address and
@@ -179,7 +209,7 @@ var sendRequestAndWriteResponse = function() {
 }
 
 
-sendRequestAndWriteResponse(); // sending the request
+sendRequestAndGrabData(); // sending the request
 
 /*
 	I'm using setInterval instead of setTimeout but I don't know what is going to happen if the server takes more 
@@ -188,5 +218,5 @@ sendRequestAndWriteResponse(); // sending the request
 */
  var httpGetIntervalCode = setInterval(function () { // call to 'clearInterval(httpGetInterval)' stops further executions
  	// repeating the request every 15 seconds
- 	sendRequestAndWriteResponse();	
+ 	sendRequestAndGrabData();	
  }, intervalTime); //intervalTime comes from the JSON configuration file
