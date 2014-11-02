@@ -1,2 +1,5 @@
 .DS_Store
 dataGrabbed.json
+node_modules
+reports
+dataReporter.js
