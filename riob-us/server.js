@@ -35,8 +35,7 @@ var fs = require('fs'); // using fs to read riobus-config.json.
 var compression = require('compression') // compression middleware to compress files before sending on response.
 
 var app = express(); // initializing a new express object (as if javascript were object oriented).
-
-app.use(compression()); // compress with gzip all the contents that will be sent.
+app.use(compression()); // compress with gzip every content that will be sent.
 
 //routing for "riob.us/" requests
 app.get('/', function (req, res, next) {
@@ -105,6 +104,25 @@ var server = app.listen(serverPort, function () {
 
 // seding sutff from our data, using the same form as dadosabertos server sends their json.
 var sendBusLineAsJson = function (res, busLine) {
+	var busLines = busLine.split(","); // requests can query for more than 1 bus line like this: 'linha="213,341,485"'.
+	if (busLines.length < 11) // we will only accept 10 bus lines in the query.
+		busLines.slice(0,10); // if there's more than 10, we will get the 10 first bus lines.
+	// we need to remove duplicate bus lines.
+	var a = {} // creating an object to work as a hashmap structure.
+	for (var i = busLines.length - 1; i >= 0; i--) { // for each bus lines.
+		if (!a[busLines[i]]) // if this bus lines string is a non existing attribute inside our object.
+			a[busLines[i]] = true; // create this attribute in it, with a simple boolean (could be anything)
+	};
+	busLines = Object.keys(a); // now get just the attribute names of the object (the keys of the hash).
+	var ret = [] // building return that will be sent on response.
+	for (var i = busLines.length - 1; i >= 0; i--) { // for each bus line in the query.
+		var busses = data[busLines[i]]; // get the array containing all busses in it.
+		if (busses) // if this array exists.
+			ret = ret.concat(busses); // oncactenate with what's inside the return variable.
+	};
+	// send json on response.
 	res.jsonp({COLUMNS:["DATAHORA","ORDEM","LINHA","LATITUDE","LONGITUDE","VELOCIDADE, DIRECAO"], 
-				DATA: data[busLine]}); // our data enters here.
+				DATA: ret, // our return data enters here.
+				LASTUPDATE: data.lastUpdate});
+
 }
