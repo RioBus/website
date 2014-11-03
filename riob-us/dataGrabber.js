@@ -31,7 +31,7 @@ var httpGETCallback = function (response) {
 			the 'data' event. I don't know which types of error it could be. 
 		*/
 		response.on('error', function(err) {
-		   console.log(" - We've had this error on dadosabertos response: " + err);
+		   console.log(" - We've had this error on dadosabertos RESPONSE: " + err);
 		});
 
 		/*	in here we need to check if the response we are getting is compressed with gzip. if it is, we have to
@@ -90,9 +90,9 @@ var httpGETCallback = function (response) {
 					from each bus line. the bus lines in this object will be sent to the server.js thread, whenever
 					it receives am http request for a bus line.
 				*/
-				var data = {lastUpdate: (new Date()).toLocaleString()};
+				var data = {lastUpdate: (new Date()).toUTCString()};
 				/*	setting a new time at every reponse with status code 200. transforming date to a 
-					readable time localized string.*/
+					readable UTC time string.*/
 
 				/*
 					data will be a hashtable/hashmap, where the key will be the bus line and the value
@@ -120,9 +120,9 @@ var httpGETCallback = function (response) {
 					var bus = json['DATA'][i];
 					var key = "" + bus[2]; // string that will be the key for the hashmap structure. 
 					// "" + NUMBER, parses the NUMBER to a string. javascript's fastest way to parse number to string.
-					if (data[key]){ // if key already exists in data structure
+					if (data[key]){ // if key already exists in data structure.
 						data[key].push(bus); // add this bus to this key (add bus to its respective line).
-					} else { // if key doesn't exist
+					} else { // if key doesn't exist.
 						data[key] = [bus]; // instantiate an array in the key with this bus inside it.
 					}
 				}
@@ -135,7 +135,7 @@ var httpGETCallback = function (response) {
 				// 	console.log(key, "-",data[key].length);
 				// }
 
-				process.send({data: data}); // sending data to parent thread.
+				// process.send({data: data}); // sending data to parent thread.
 
 				/*	this is the part where we should store the data in a database.
 					by now, we just print some shit about the response and write a json file with the data organized
@@ -185,8 +185,8 @@ var sendRequestAndGrabData = function() {
 
 	// setting the minimum request information that will be needed to use on http.get() function
 	var options = {
-		host: config.host, // comes from JSON configuration file
-		path: config.path, // comes from JSON configuration file
+		host: "localhost:8080", //config.host, // comes from JSON configuration file
+		path: "",//config.path, // comes from JSON configuration file
 		headers: { // we want to get the data enconded with gzip, after lots of trial and error, this is the right order
 	  		"Accept-Encoding": "gzip", // we first say it has to be compacted with gzip
 			"Accept": "application/json" // then we say which format we want to receive
@@ -203,7 +203,7 @@ var sendRequestAndGrabData = function() {
 
 	// registering function that will be called if our request trigger the 'error' event
 	get.on('error', function (e) { 
-		console.log('problem with request: ' + e.message); //printing error message
+		console.log(' - our REQUEST has had this error: ' + e.message); //printing error message
 	});
 
 }
