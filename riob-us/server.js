@@ -39,6 +39,7 @@ app.use(compression()); // compress with gzip every content that will be sent.
 
 //routing for "riob.us/" requests
 app.get('/', function (req, res, next) {
+	console.log(" - " + req.headers['referer']);
 	// if we can find the 'linha' and 's' paramaters in the request url, it means the request is searching for a bus line.
 	if (Object.keys(req.query).length > 0) { // checking if there are any parameters in the request.
 		// getting the first string from the url request.
@@ -125,7 +126,7 @@ var sendBusLineAsJson = function (res, busLine) {
 			returnData = returnData.concat(busses); // oncactenate with what's inside the return variable.
 	};
 	// send json on response.
-	res.jsonp({COLUMNS:["DATAHORA","ORDEM","LINHA","LATITUDE","LONGITUDE","VELOCIDADE, DIRECAO"], 
+	res.jsonp({COLUMNS:["DATAHORA","ORDEM","LINHA","LATITUDE","LONGITUDE","VELOCIDADE", "DIRECAO"], 
 				DATA: returnData, // our return data enters here.
 				LASTUPDATE: data.lastUpdate});
 }

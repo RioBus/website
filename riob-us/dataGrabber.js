@@ -24,6 +24,7 @@ var httpGETCallback = function (response) {
 	if (response.statusCode == 200) {
 		// printing http header from the server's response
 		// console.log(' - HEADERS: ' + JSON.stringify(response.headers));
+		console.log('Dados recebidos em ' + Date(Date.now()));
 
 		var json = ''; // variable that will hold the json received from dadosabertos server
 
@@ -135,7 +136,7 @@ var httpGETCallback = function (response) {
 				// 	console.log(key, "-",data[key].length);
 				// }
 
-				// process.send({data: data}); // sending data to parent thread.
+				process.send({data: data}); // sending data to parent thread.
 
 				/*	this is the part where we should store the data in a database.
 					by now, we just print some shit about the response and write a json file with the data organized
@@ -185,8 +186,8 @@ var sendRequestAndGrabData = function() {
 
 	// setting the minimum request information that will be needed to use on http.get() function
 	var options = {
-		host: "localhost:8080", //config.host, // comes from JSON configuration file
-		path: "",//config.path, // comes from JSON configuration file
+		host: config.host, // comes from JSON configuration file
+		path: config.path, // comes from JSON configuration file
 		headers: { // we want to get the data enconded with gzip, after lots of trial and error, this is the right order
 	  		"Accept-Encoding": "gzip", // we first say it has to be compacted with gzip
 			"Accept": "application/json" // then we say which format we want to receive
