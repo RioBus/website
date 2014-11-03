@@ -1,0 +1,26 @@
+{
+  "name": "riobus-web",
+  "version": "0.1.1",
+  "description": "Riob.us project",
+  "main": "server.js",
+  "scripts": {
+    "start": "node riob-us/server.js"
+  },
+  "dependencies": {
+    "express": "~4.10.x",
+    "ga": ">=0.0.2",
+    "compression": ">=1.2.0"
+  },
+  "engines": {
+    "node": "0.10.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cassiohg/riobus-web/tree/node.js-dataGrabber"
+  },
+  "keywords": [
+    "node",
+    "riobus"
+  ],
+  "license": "GNU GPL2"
+}

@@ -1,0 +1,15 @@
+{
+	"dataGrabber": {
+		"host": "dadosabertos.rio.rj.gov.br",
+		"path": "/apiTransporte/apresentacao/rest/index.cfm/onibus",
+		"intervalTime": 15000
+	},
+	"server": {
+		"port": 81,
+		"maxBusLines": 10
+	},
+	"dataReporter": {
+		"intervalTime": 180000,
+		"busLines": [485, 210, 125, 616, 625, 341]
+	}
+}

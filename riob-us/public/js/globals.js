@@ -21,8 +21,7 @@ function addMarker(location, data) {
         iconUrl = iconBase+"bus_" + markerColors[1] + ".png";
     } else {
         iconUrl = iconBase+"bus_" + markerColors[2] + ".png";
-    }
-  
+    }  
     var marker = new google.maps.Marker({
         position: location,
         map: map,
@@ -110,7 +109,7 @@ function findBus(clicked){
     currentLine = $("#busLine").val();
 	history.pushState(null, "Rio Bus - " + currentLine, "?" + currentLine);
     var line = currentLine + "_" + loadTimeout;
-    $.getJSON("/proxy.php",{
+    $.getJSON("http://riob.us/proxy.php",{
             s: "1", 
             linha: currentLine,
             rand: Math.round(Math.random()*999999)
