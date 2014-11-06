@@ -21,11 +21,15 @@ var fork = require('child_process').fork, // child processes are different threa
 // var fork = require('child_process').fork,
 // 	child = fork(__dirname + "/fakeDataGrabber.js");
 
-var data = {a: "no busses yet"}; // data will hold all the bus lines collected by the dataGrabber.js thread.
+// 'data' will hold all the bus lines,with their respective busses, collected by the dataGrabber.js thread.
+var data = {a: "no busses yet"};
+// 'json' will hold the exact json that comes from dadosabertos server, plus the lastUpdate date and time.
+var json = {a: "no busses yet"};
 
 // dataGrabber will send everything collected to this server.js thread.
-child.on('message', function (message) {
-	data = message.data; // 'message' is the object passed from the child process.
+child.on('message', function (message) { // 'message' is the object passed from the child process.
+	data = message.data; // copying child processes' 'data' over our current 'data'.
+	json = message.json  // copying child processes' 'json' over our current 'json'.
 })
 
 
@@ -78,11 +82,16 @@ app.get('/', function (req, res, next) {
 	}
 })
 
+//routing for "riob.us/all" requests. returns all busses.
+app.get('/all', function (req, res, next) {
+	res.jsonp(json); // returnuning the dadosabertos server json with one more attribute, 'lastUpdate'.
+})
+
 /*	using express.static middleware to serve static files. it only serves existing files and calls next() 
 	when file is not found. */
 app.use(express.static(__dirname + '/public')); // setting express.static to use '/public' as the root static folder.
 
-//routing for "riob.us/busLine" requests
+//routing for "riob.us/busLine" requests. returns every bus in the specified bus lines.
 app.get('/:busLine', function (req, res, next) {
 	var busLine = req.param("busLine");
 	sendBusLineAsJson(res, busLine); // function defined because it is also being used in the queryed url
