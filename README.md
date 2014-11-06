@@ -10,12 +10,24 @@ Os dados são oferecidos publicamente pela prefeitura do Rio de Janeiro, em parc
 
 Para rodá-lo, 
 <ol>
+
 	<li>instale node.js</li>
-	<li>clone ou baixe o zip do projeto.
-		<ol><li>se baixou em zip, descopacte-o.</li></ol>
+
+	<li>clone o projeto ou baixe o zip dele.
+		<ol>
+			<li>se baixou em zip, descopacte-o.</li>
+			<li>se preferir clonar: <br>
+			<code>git clone https://github.com/marco-jardim/riobus-web</code></li>
+		</ol>
 	</li>
-	<li>abra o terminal e entre no diretório 'riob-us'.</li>
-		<code>$ cd riobus-web/riob-us</code>
-	<li>chame o node passando o 'server.js' como argumento.</li>
-		<code>$ node server.js</code>
+
+	<li>abra o terminal e entre no diretório 'riob-us'.<br>
+	<code>cd riobus-web/riob-us</code> </li>
+		
+	<li>installe as dependencias usando o npm. <br>
+	<code>npm install</code></li>
+
+	<li>chame o node passando o 'server.js' como argumento. <br>
+	<code>node server.js</code></li>
+		
 </ol>
