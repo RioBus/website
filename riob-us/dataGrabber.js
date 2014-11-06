@@ -16,12 +16,20 @@
 
 
 var http = require('http'); // importing http module. it's a node's default module.
-var fs = require('fs');	// importing filesystem module. using fs to read riobus-config.json
+var fs = require('fs');	// importing filesystem module. using fs to read riobus-config.json.
 var zlib = require('zlib'); // importing zlib module that we will use to decompress the JSON compressed in gzip.
 
-// function that will be called when we receive a response from dadosabertos server
+var lastResponseWasBad; // variable is set to true when dadosabertos server can't respond with http status code 200.
+
+// function that will be called when we receive a response from dadosabertos server.
 var httpGETCallback = function (response) {
+
 	if (response.statusCode == 200) {
+
+		if (lastResponseWasBad) { // last response had an status code different from 200.
+			console.log("- Dadosabertos is fine now"); // logging notice that we are back on trail.
+			lastResponseWasBad = false; // this is reponse hat status code 200, so this one is fine.
+		}
 		// printing http header from the server's response
 		// console.log(' - HEADERS: ' + JSON.stringify(response.headers));
 
@@ -90,7 +98,9 @@ var httpGETCallback = function (response) {
 					from each bus line. the bus lines in this object will be sent to the server.js thread, whenever
 					it receives am http request for a bus line.
 				*/
-				var data = {lastUpdate: (new Date()).toUTCString()};
+				var date = (new Date()).toUTCString()
+				var data = {lastUpdate: date}; // adding atribute that informs when we received the last successful response.
+				json.lastUpdate = date; // adding atribute that informs when we received the last successful response.
 				/*	setting a new time at every reponse with status code 200. transforming date to a 
 					readable UTC time string.*/
 
@@ -116,8 +126,8 @@ var httpGETCallback = function (response) {
 				*/
 
 				// loop running backwards, according to google's recommendation for v8 engine.
-				for (var i = json['DATA'].length - 1; i >= 0; i--) {
-					var bus = json['DATA'][i];
+				for (var i = json.DATA.length - 1; i >= 0; i--) {
+					var bus = json.DATA[i];
 					var key = "" + bus[2]; // string that will be the key for the hashmap structure. 
 					// "" + NUMBER, parses the NUMBER to a string. javascript's fastest way to parse number to string.
 					if (data[key]){ // if key already exists in data structure.
@@ -135,7 +145,7 @@ var httpGETCallback = function (response) {
 				// 	console.log(key, "-",data[key].length);
 				// }
 
-				// process.send({data: data}); // sending data to parent thread.
+				process.send({data: data, json: json}); // sending 'data' and 'json' to parent thread.
 
 				/*	this is the part where we should store the data in a database.
 					by now, we just print some shit about the response and write a json file with the data organized
@@ -158,35 +168,50 @@ var httpGETCallback = function (response) {
 				// });
 			}
 		});
-	} else if (response.statusCode == 'ECONNRESET') { // statusCode for when remote server close the connection on us.
-		console.log(" - Dadosabertos server closed the connection");
-	} else if (response.statusCode == 503) { // statusCode for when remote server is unavailable.
-		console.log(" - Dadosabertos server was unavailable, code:", response.statusCode);
-	} else if (response.statusCode == 404) { // statusCode for when remote server can't find request (not found).
-		console.log(" - Dadosabertos server could not find anything matching our request, code:", response.statusCode);
 	} else {
-		console.log(" - Dadosabertos responded with statuscode:", response.statusCode);
+		lastResponseWasBad = true
+		if (response.statusCode == 'ECONNRESET') { // statusCode for when remote server close the connection on us.
+			console.log(" - Dadosabertos server closed the connection");
+		} else if (response.statusCode == 503) { // statusCode for when remote server is unavailable.
+			console.log(" - Dadosabertos server was unavailable, code:", response.statusCode);
+		} else if (response.statusCode == 404) { // statusCode for when remote server can't find request (not found).
+			console.log(" - Dadosabertos server could not find anything matching our request, code:", response.statusCode);
+		} else {
+			console.log(" - Dadosabertos responded with statuscode:", response.statusCode);
+		}
 	}
 }
 
-var intervalTime = 15000; // default intervalTime to be passed as argument in the setInterval function later on
+var intervalTime; // default intervalTime to be passed as argument in the setInterval function later on
+var httpGetIntervalCode; //variable that will hold the 'setInterval([function])' return identifier.
 
 // saved the function that sends the request in this variable, just so I can use it again inside setInterval()
-var sendRequestAndGrabData = function() {
+function sendRequestAndGrabData() {
 
-	/*
-		getting the configuration of this request from a JSON file. this will help us change the server address and
+	/* getting the configuration of this request from a JSON file. this will help us change the server address and
 		not stop the execution. we also get the intervalTime from this file.
-		I'm making a syncronous read because the rest of the execution needs this information
-	*/
+		I'm making a syncronous read because the rest of the execution needs this information. */
 	// reading JSON configuration file
 	var config = JSON.parse(fs.readFileSync(__dirname + "/riobus-config.json")).dataGrabber;
-	intervalTime = config.intervalTime; // setting intervalTime from its respective field from the JSON file
+
+	/*	when the intervalTime retrieved from our JSON configuration file is different than the last one,
+		we clear the timeout and set a new one with this new intervalTime. */
+	if (intervalTime != config.intervalTime) {
+		intervalTime = config.intervalTime; // setting intervalTime from its respective field from the JSON file
+		clearInterval(httpGetIntervalCode);
+		/*	I'm using setInterval instead of setTimeout but I don't know what is going to happen if the server takes more 
+			time to respond than the interval takes to finish. I wouldn't like to send another request when the previous one 
+			hasn't received a response. */
+		httpGetIntervalCode = setInterval(function () { // call to 'clearInterval(httpGetInterval)' stops further executions
+			// repeating the request every 15 seconds
+			sendRequestAndGrabData();
+		}, intervalTime); //intervalTime comes from the JSON configuration file
+	}
 
 	// setting the minimum request information that will be needed to use on http.get() function
 	var options = {
-		host: "localhost:8080", //config.host, // comes from JSON configuration file
-		path: "",//config.path, // comes from JSON configuration file
+		host: config.host, // comes from JSON configuration file
+		path: config.path, // comes from JSON configuration file
 		headers: { // we want to get the data enconded with gzip, after lots of trial and error, this is the right order
 	  		"Accept-Encoding": "gzip", // we first say it has to be compacted with gzip
 			"Accept": "application/json" // then we say which format we want to receive
@@ -200,7 +225,6 @@ var sendRequestAndGrabData = function() {
 	*/
 	var get = http.get(options, httpGETCallback); //sending a request
 
-
 	// registering function that will be called if our request trigger the 'error' event
 	get.on('error', function (e) { 
 		console.log(' - our REQUEST has had this error: ' + e.message); //printing error message
@@ -210,13 +234,3 @@ var sendRequestAndGrabData = function() {
 
 
 sendRequestAndGrabData(); // sending the request
-
-/*
-	I'm using setInterval instead of setTimeout but I don't know what is going to happen if the server takes more 
-	time to respond than the interval takes to finish. I wouldn't like to send another request when the previous one 
-	hasn't received a response.
-*/
- var httpGetIntervalCode = setInterval(function () { // call to 'clearInterval(httpGetInterval)' stops further executions
- 	// repeating the request every 15 seconds
- 	sendRequestAndGrabData();	
- }, intervalTime); //intervalTime comes from the JSON configuration file
