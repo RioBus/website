@@ -95,27 +95,20 @@ var httpGETCallback = function (response) {
 
 			if (json !== null) { // if json is valid, keep going.
 				/*	object 'data' is here to represent a simple data structure. this object will hold all the busses
-					from each bus line. the bus lines in this object will be sent to the server.js thread, whenever
-					it receives am http request for a bus line.
-				*/
-				var date = (new Date()).toUTCString()
-				var data = {lastUpdate: date}; // adding atribute that informs when we received the last successful response.
-				json.lastUpdate = date; // adding atribute that informs when we received the last successful response.
-				/*	setting a new time at every reponse with status code 200. transforming date to a 
-					readable UTC time string.*/
+					in each bus line. All bus lines in this object will be sent to the server.js thread everytime this
+					code runs. */
+				var data = {};
 
 				/*
-					data will be a hashtable/hashmap, where the key will be the bus line and the value
+					'data' will be a hashtable/hashmap, where the key will be the bus line and the value
 					will be all the busses on this line that came in the JSON response, like this:
 
 					key 			: 	value
-					lastUpdate		: 	"Sun Nov 02 2014 16:26:12 GMT-0200 (BRST)", 
 					"<bus line>"	: 	[<bus info>, <bus info>, ...],
 					"<bus line>"	: 	[<bus info>, <bus info>, ...],
-					"<bus line>"	: 	[<bus info>, <bus info>, ...],
+					"<bus line>"	: 	[<bus info>, <bus info>, ...]
 
 					where :
-					lastUpdate is a date that is set at every sucessfull response we get.
 					<bus info> = ["DATAHORA","ORDEM","LINHA","LATITUDE","LONGITUDE","VELOCIDADE","DIRECAO"]
 					<bus line> = "LINHA"
 
@@ -123,6 +116,24 @@ var httpGETCallback = function (response) {
 					our future database. This structre makes the search for all the busses in a bus line, retrieve a
 					single value from one key. This is the main operation done in the project: a search for all the busses
 					from one bus line.
+				*/
+
+				var orders = {};
+				/* orders is also a hashtable/hashmap, where the key will be the bus order and the value
+					will be its respective bus, like this:
+
+					key 			: 	value
+					"<bus order>"	: 	<bus info>,
+					"<bus order>"	: 	<bus info>,
+					"<bus order>"	: 	<bus info>
+					
+					where :
+					<bus info> = ["DATAHORA","ORDEM","LINHA","LATITUDE","LONGITUDE","VELOCIDADE","DIRECAO"]
+					<bus order> = "ORDEM"
+
+					I have decided to build the structure in this way because I believe this is the best way to retrieve
+					a bus when we receive a query for a bus order. And also beceause the whole 'data' isn't big. Memory ins't
+					an issue by now.
 				*/
 
 				// loop running backwards, according to google's recommendation for v8 engine.
@@ -135,6 +146,10 @@ var httpGETCallback = function (response) {
 					} else { // if key doesn't exist.
 						data[key] = [bus]; // instantiate an array in the key with this bus inside it.
 					}
+
+					orders[bus[1]] = [bus];
+					/*	array inside array, because on retrieval it will come nested, just like when we retrive a bus line.
+						when we retrieve a bus line (data[<bus line>]), we also get an array of arrays. */
 				}
 
 				/*	printing the amount of busses in each bus line. it doesn't mean that there are this amount of
@@ -145,12 +160,14 @@ var httpGETCallback = function (response) {
 				// 	console.log(key, "-",data[key].length);
 				// }
 
-				process.send({data: data, json: json}); // sending 'data' and 'json' to parent thread.
+				// sending 'data', 'json', 'orders' and lastUpdate to parent thread.
+				process.send({data: data, json: json.DATA, orders: orders, lastUpdate: (new Date()).toUTCString()});
+				/*	lastUpdate informs when we received the last successful response. transforming date to a 
+					readable UTC time string. it looks like this: "Sun Nov 02 2014 16:26:12 GMT-0200 (BRST)"*/
 
 				/*	this is the part where we should store the data in a database.
 					by now, we just print some shit about the response and write a json file with the data organized
-					by bus line.
-				*/
+					by bus line. */
 				// var keys = Object.keys(data); // return all the keys in our simple data structure
 				// console.log(keys); // print all keys
 				// console.log(" --- Number of bus lines = " + keys.length); // print the amount of keys
