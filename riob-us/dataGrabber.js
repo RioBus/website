@@ -18,6 +18,12 @@
 var http = require('http'); // importing http module. it's a node's default module.
 var fs = require('fs');	// importing filesystem module. using fs to read riobus-config.json
 var zlib = require('zlib'); // importing zlib module that we will use to decompress the JSON compressed in gzip.
+var moment = require('moment'); // importing moment to format date when ajusting daylight saving errors
+
+const MAX_DELAY_TO_ADJUST = 15 * 60 * 1000 ; // 15 minutes (expressed in milliseconds)
+const MIN_DELAY_TO_ADJUST = -5 * 60 * 1000 ; // -5 minutes (expressed in milliseconds)
+const MILLISECONDS_IN_AN_HOUR = 60*60*1000 ;
+
 
 // function that will be called when we receive a response from dadosabertos server
 var httpGETCallback = function (response) {
@@ -41,6 +47,7 @@ var httpGETCallback = function (response) {
 			the response and the gzip decompresser listen to these two events.
 		*/
 		var output; // the object that will listen for 'data' and 'end' events
+		var serverTime = Date.parse(response.headers['date']);
 		if (response.headers['content-encoding'] == 'gzip') { // the server tell us which kind of thing it is sending
 		  var gzip = zlib.createGunzip(); // creating the gzip decompresser
 		  response.pipe(gzip); // sending data from the responses (compressed) to the decompresser
@@ -119,6 +126,30 @@ var httpGETCallback = function (response) {
 				// loop running backwards, according to google's recommendation for v8 engine.
 				for (var i = json['DATA'].length - 1; i >= 0; i--) {
 					var bus = json['DATA'][i];
+
+					// Check for daylight saving time (DST) erros (ex: when the bus is not on DST)
+					var busDate = Date.parse(bus[0]);
+					var delayInSeconds = serverTime-busDate ;
+
+					var adjusted = false ;
+
+					// Make adjustements when delay is about an hour before or after server time
+					if ( delayInSeconds >= -MILLISECONDS_IN_AN_HOUR+MIN_DELAY_TO_ADJUST && delayInSeconds <= -MILLISECONDS_IN_AN_HOUR+MAX_DELAY_TO_ADJUST ) {
+						busDate -= MILLISECONDS_IN_AN_HOUR ;
+						adjusted = true ;
+					} else if ( delayInSeconds >= MILLISECONDS_IN_AN_HOUR+MIN_DELAY_TO_ADJUST && delayInSeconds <= MILLISECONDS_IN_AN_HOUR+MAX_DELAY_TO_ADJUST ) {
+						busDate += MILLISECONDS_IN_AN_HOUR ;
+						adjusted = true ;
+					}
+
+					// Log changes on date
+					//console.log(bus[0] + " (" + delayInSeconds + " :: " + adjusted + ") --> " + newDate);
+
+					// Adjust date, if needed
+					if ( adjusted ) {
+						bus[0] = moment(busDate).format("MM-DD-YYYY HH:mm:ss"); ;
+					}
+
 					var key = "" + bus[2]; // string that will be the key for the hashmap structure. 
 					// "" + NUMBER, parses the NUMBER to a string. javascript's fastest way to parse number to string.
 					if (data[key]){ // if key already exists in data structure.
