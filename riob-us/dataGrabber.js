@@ -19,16 +19,20 @@ var http = require('http'); // importing http module. it's a node's default modu
 var fs = require('fs');	// importing filesystem module. using fs to read riobus-config.json.
 var zlib = require('zlib'); // importing zlib module that we will use to decompress the JSON compressed in gzip.
 
-var lastResponseWasBad; // variable is set to true when dadosabertos server can't respond with http status code 200.
+var lastTimeWasBad = false; // variable is set to true when dadosabertos server can't respond with http status code 200.
 
 // function that will be called when we receive a response from dadosabertos server.
 var httpGETCallback = function (response) {
 
-	if (response.statusCode == 200) {
+	/*	We are sending a request only after we get a response or, if we don't get one, an 'intervalTime' 
+		after our request times out (when timeout, wait for a few seconds and send another request). */
+	httpGetIntervalCode = setTimeout(sendRequestAndGrabData, intervalTime);
 
-		if (lastResponseWasBad) { // last response had an status code different from 200.
+	if (response.statusCode == 200) { // we can only do stuff if we receive an statusCode of 200.
+
+		if (lastTimeWasBad) { // last response had an status code different from 200.
 			console.log("- Dadosabertos is fine now"); // logging notice that we are back on trail.
-			lastResponseWasBad = false; // this is reponse hat status code 200, so this one is fine.
+			lastTimeWasBad = false; // this is reponse hat status code 200, so this one is fine.
 		}
 		// printing http header from the server's response
 		// console.log(' - HEADERS: ' + JSON.stringify(response.headers));
@@ -36,17 +40,16 @@ var httpGETCallback = function (response) {
 		var json = ''; // variable that will hold the json received from dadosabertos server
 
 		/*	registering function that will be called if there is an error on response. When response triggers 
-			the 'data' event. I don't know which types of error it could be. 
-		*/
+			the 'data' event. I don't know which types of error it could be. */
 		response.on('error', function(err) {
 		   console.log(" - We've had this error on dadosabertos RESPONSE: " + err);
 		});
 
 		/*	in here we need to check if the response we are getting is compressed with gzip. if it is, we have to
-			instantiate a gzip decompresser and pass all the data from response to this gzip decompresser.
-			in the end, we set the object that will be notified by the .on('data') and .on('end') events. both
-			the response and the gzip decompresser listen to these two events.
-		*/
+			instantiate a gzip decompresser and tell node to pass all the data from response to this gzip decompresser.
+			in the end, we set either object (response or gzip) that will be notified by the .on('data') 
+			and .on('end') events. both the response and the gzip decompresser (it seems...) listen to these two events. 
+			I don't actually understand this 'pipe' thing. */
 		var output; // the object that will listen for 'data' and 'end' events
 		if (response.headers['content-encoding'] == 'gzip') { // the server tell us which kind of thing it is sending
 		  var gzip = zlib.createGunzip(); // creating the gzip decompresser
@@ -57,15 +60,13 @@ var httpGETCallback = function (response) {
 		}
 
 		/*	registering function that will be called at every chunk received by either the response
-			or the decompresser. When the 'data' event is triggered.
-		*/
+			or the decompresser. When the 'data' event is triggered. */
 		output.on('data', function (chunk) {
 			json += chunk.toString('utf-8'); // appending all the chunks
 		});
 
 		/*	registering function that will be called when data is completely received.
-			When the 'end' event is triggered.
-		*/
+			When the 'end' event is triggered. */
 		output.on('end', function () {
 			try {
 				// parsing all the data, read as a string, as JSON. now, it's a javascript object
@@ -85,6 +86,7 @@ var httpGETCallback = function (response) {
 				will not consider it as a valid response. because it means their service could not provide
 				any data, which they should. As we are quering for everything, something must be provided.
 			*/
+
 			// checking if dadosabertos server gave us just a message telling us that nothing were found.
 			// "COLUMNS" attribute change to an array with size 1 and its content is'MENSAGEM'.
 			if (json['COLUMNS'][0] === "MENSAGEM") {
@@ -93,7 +95,7 @@ var httpGETCallback = function (response) {
 				json = null; // it means this json is invalid to our purpose.
 			}
 
-			if (json !== null) { // if json is valid, keep going.
+			if (json !== null) { // if json is a valid object, keep going.
 				/*	object 'data' is here to represent a simple data structure. this object will hold all the busses
 					in each bus line. All bus lines in this object will be sent to the server.js thread everytime this
 					code runs. */
@@ -132,11 +134,11 @@ var httpGETCallback = function (response) {
 					<bus order> = "ORDEM"
 
 					I have decided to build the structure in this way because I believe this is the best way to retrieve
-					a bus when we receive a query for a bus order. And also beceause the whole 'data' isn't big. Memory ins't
-					an issue by now.
+					a bus when we receive a query for a bus order. And also beceause the whole 'data' isn't big. 
+					Memory ins't an issue by now.
 				*/
 
-				// loop running backwards, according to google's recommendation for v8 engine.
+				// loop running backwards, according to google's recommendation for v8 engine. **forwards is just as good**.
 				for (var i = json.DATA.length - 1; i >= 0; i--) {
 					var bus = json.DATA[i];
 					var key = "" + bus[2]; // string that will be the key for the hashmap structure. 
@@ -185,45 +187,32 @@ var httpGETCallback = function (response) {
 				// });
 			}
 		});
-	} else {
-		lastResponseWasBad = true
+	} else { // if response's statusCode wasn't 200, than it's bad new.
+		lastTimeWasBad = true;
 		if (response.statusCode == 'ECONNRESET') { // statusCode for when remote server close the connection on us.
-			console.log(" - Dadosabertos server closed the connection");
+			console.log(" - Dadosabertos server closed the connection, code:", response.statusCode);
 		} else if (response.statusCode == 503) { // statusCode for when remote server is unavailable.
 			console.log(" - Dadosabertos server was unavailable, code:", response.statusCode);
 		} else if (response.statusCode == 404) { // statusCode for when remote server can't find request (not found).
-			console.log(" - Dadosabertos server could not find anything matching our request, code:", response.statusCode);
+			console.log(" - Dadosabertos server could not find anything matching the url, code:", response.statusCode);
 		} else {
 			console.log(" - Dadosabertos responded with statuscode:", response.statusCode);
 		}
 	}
 }
 
-var intervalTime; // default intervalTime to be passed as argument in the setInterval function later on
-var httpGetIntervalCode; //variable that will hold the 'setInterval([function])' return identifier.
+var intervalTime; // default intervalTime to be passed as argument in the setTimeout function later on.
+var httpGetIntervalCode; //variable that will hold the 'setTimeout([function], time)' return identifier.
 
-// saved the function that sends the request in this variable, just so I can use it again inside setInterval()
+// saved the function that sends the request in this variable, just so I can use it again inside setTimeout().
 function sendRequestAndGrabData() {
 
 	/* getting the configuration of this request from a JSON file. this will help us change the server address and
 		not stop the execution. we also get the intervalTime from this file.
-		I'm making a syncronous read because the rest of the execution needs this information. */
+		I'm making a syncronous read because this file is pretty is small, so it opens fast. */
 	// reading JSON configuration file
 	var config = JSON.parse(fs.readFileSync(__dirname + "/riobus-config.json")).dataGrabber;
-
-	/*	when the intervalTime retrieved from our JSON configuration file is different than the last one,
-		we clear the timeout and set a new one with this new intervalTime. */
-	if (intervalTime != config.intervalTime) {
-		intervalTime = config.intervalTime; // setting intervalTime from its respective field from the JSON file
-		clearInterval(httpGetIntervalCode);
-		/*	I'm using setInterval instead of setTimeout but I don't know what is going to happen if the server takes more 
-			time to respond than the interval takes to finish. I wouldn't like to send another request when the previous one 
-			hasn't received a response. */
-		httpGetIntervalCode = setInterval(function () { // call to 'clearInterval(httpGetInterval)' stops further executions
-			// repeating the request every 15 seconds
-			sendRequestAndGrabData();
-		}, intervalTime); //intervalTime comes from the JSON configuration file
-	}
+	intervalTime = config.intervalTime; // intervalTime comes from the JSON configuration file.
 
 	// setting the minimum request information that will be needed to use on http.get() function
 	var options = {
@@ -240,14 +229,22 @@ function sendRequestAndGrabData() {
 		I don't think we need to keep the connection alive and we don't need a body. that's why I decided for http.get()
 		instead of http.request()
 	*/
-	var get = http.get(options, httpGETCallback); //sending a request
+	// SENDING REQUEST NOW. this is when things actually start. the rest of the code is still to be run.
+	var get = http.get(options, httpGETCallback);
 
-	// registering function that will be called if our request trigger the 'error' event
+	get.setTimeout(config.timeout, function () { // setting a callback function that runs when our request's times out.
+		get.end(); // closes the request's connection.
+		console.log(' - our REQUEST has timed out.');
+		lastTimeWasBad = true; // because responding that they didn't find their own json is bad.
+		httpGetIntervalCode = setTimeout(sendRequestAndGrabData, intervalTime);
+		// calling 'clearInterval(httpGetIntervalCode)' stops the scheduled function corresponding to 'httpGetIntervalCode'.
+	})
+
+	// registering function that will be called if our request triggers an 'error' event.
 	get.on('error', function (e) { 
 		console.log(' - our REQUEST has had this error: ' + e.message); //printing error message
 	});
 
 }
 
-
-sendRequestAndGrabData(); // sending the request
+sendRequestAndGrabData(); // running the code that sends the request.
