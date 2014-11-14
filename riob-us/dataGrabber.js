@@ -195,6 +195,8 @@ var httpGETCallback = function (response) {
 			console.log(" - Dadosabertos server was unavailable, code:", response.statusCode);
 		} else if (response.statusCode == 404) { // statusCode for when remote server can't find request (not found).
 			console.log(" - Dadosabertos server could not find anything matching the url, code:", response.statusCode);
+		} else if (response.statusCode == 302) { // statusCode for when we remove server indicates url redirection.
+			console.log(" - Dadosabertos server wants us to redirect our request to a new url, code:", response.statusCode);
 		} else {
 			console.log(" - Dadosabertos responded with statuscode:", response.statusCode);
 		}
@@ -218,6 +220,7 @@ function sendRequestAndGrabData() {
 	var options = {
 		host: config.host, // comes from JSON configuration file
 		path: config.path, // comes from JSON configuration file
+		agent: false, // agent keeps connection alive until response. we turn it off so there's no agent keeping it alive.
 		headers: { // we want to get the data enconded with gzip, after lots of trial and error, this is the right order
 	  		"Accept-Encoding": "gzip", // we first say it has to be compacted with gzip
 			"Accept": "application/json" // then we say which format we want to receive
@@ -227,22 +230,23 @@ function sendRequestAndGrabData() {
 	/*
 		http.get(options, [callback]) function makes a request using method GET and calls request.end() automatically.
 		I don't think we need to keep the connection alive and we don't need a body. that's why I decided for http.get()
-		instead of http.request()
-	*/
+		instead of http.request() */
 	// SENDING REQUEST NOW. this is when things actually start. the rest of the code is still to be run.
-	var get = http.get(options, httpGETCallback);
+	var requestGet = http.get(options, httpGETCallback);
 
-	get.setTimeout(config.timeout, function () { // setting a callback function that runs when our request's times out.
-		get.end(); // closes the request's connection.
-		console.log(' - our REQUEST has timed out.');
-		lastTimeWasBad = true; // because responding that they didn't find their own json is bad.
-		httpGetIntervalCode = setTimeout(sendRequestAndGrabData, intervalTime);
-		// calling 'clearInterval(httpGetIntervalCode)' stops the scheduled function corresponding to 'httpGetIntervalCode'.
+	/*	setting a callback function that runs when our request's times out. when the request times out, the connection 
+		is still up. It's nothing more than a simple javsascript 'setTimeout()' scheduler underneath this call. */
+	requestGet.setTimeout(config.timeout, function () {
+		console.log((new Date()).toUTCString(), ' - our REQUEST has timed out.');
+		requestGet.abort(); // this makes the request emit an 'error' event. because it force closes the current connection.
 	})
 
 	// registering function that will be called if our request triggers an 'error' event.
-	get.on('error', function (e) { 
-		console.log(' - our REQUEST has had this error: ' + e.message); //printing error message
+	requestGet.on('error', function (e) { 
+		lastTimeWasBad = true; // because errors are bad. we treat this variable in the next sucessful response.
+		console.log((new Date()).toUTCString(),' - our REQUEST has had this error: ' + e.message); //printing error message.
+		httpGetIntervalCode = setTimeout(sendRequestAndGrabData, intervalTime); // on erros, resend request.
+		// calling 'clearInterval(httpGetIntervalCode)' stops the scheduled function corresponding to 'httpGetIntervalCode'.
 	});
 
 }
