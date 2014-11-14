@@ -36,6 +36,7 @@ var httpGETCallback = function (response) {
 		}
 		// printing http header from the server's response
 		// console.log(' - HEADERS: ' + JSON.stringify(response.headers));
+		console.log('Dados recebidos em ' + Date(Date.now()));
 
 		var json = ''; // variable that will hold the json received from dadosabertos server
 

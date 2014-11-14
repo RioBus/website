@@ -8,6 +8,8 @@ var loadTimeout = 0;
 var currentLine = '';
 var userLocation = false;
 var modalOpen = false;
+var linhas = [];
+var arrayCores = ["#FF0000","#0000FF","#00FF00","#FF0000","#00FF00","#0000FF","#FF0000","#0000FF"];
 
 function addMarker(location, data) {
     markersPositions.push(location);
@@ -21,7 +23,7 @@ function addMarker(location, data) {
         iconUrl = iconBase+"bus_" + markerColors[1] + ".png";
     } else {
         iconUrl = iconBase+"bus_" + markerColors[2] + ".png";
-    }  
+    }
     var marker = new google.maps.Marker({
         position: location,
         map: map,
@@ -109,8 +111,8 @@ function findBus(clicked){
     currentLine = $("#busLine").val();
 	history.pushState(null, "Rio Bus - " + currentLine, "?" + currentLine);
     var line = currentLine + "_" + loadTimeout;
-    $.getJSON("http://riob.us/proxy.php",{
-            s: "1", 
+    $.getJSON("http://riob.us:81/?callback=?",{
+            s: "1",
             linha: currentLine,
             rand: Math.round(Math.random()*999999)
         },
@@ -139,7 +141,7 @@ function findBus(clicked){
                 console.log("A busca retornou "+data.DATA.length+" resultados.");
             }
     }).error(function(e){
-        $("#spinner").hide(0);		        
+        $("#spinner").hide(0);
 		console.log(e);
 		if (e.responseText.indexOf("Server Error") > -1)
 			toast("O servidor da prefeitura está fora do ar neste momento. Tente novamente mais tarde.", 5);
@@ -162,3 +164,61 @@ $('#btn-about').click(function(e){
     $('.modal').trigger('openModal');
     app.openModal = true;
 });
+
+function limparCoordenadas() {
+  for(var i = 0; i < linhas.length; i++) {
+    if(linhas) {
+      linhas[i].setMap(null);
+    }
+  }
+}
+
+//usa papaparse.js
+function desenhaShape(){
+  currentLine = $("#busLine").val();
+  $.ajax("http://dadosabertos.rio.rj.gov.br/apiTransporte/Apresentacao/csv/gtfs/onibus/percursos/gtfs_linha"+ currentLine +"-shapes.csv")
+  .success(function (data, status, jqXHR){
+
+    var obj = Papa.parse(data);
+    var arrayDados = obj.data;
+    arrayDados.shift();
+
+    limparCoordenadas();
+
+    var ordens = [[]];
+    var indiceOrdens = 0;
+    var coordenadas = [];
+
+    for(var i = 0; i < arrayDados.length; i++) {
+      var ponto = arrayDados[i];
+      var lat = ponto[5];
+      var lng = ponto[6];
+      var ordem = ponto[3];
+
+      var coordenada = new google.maps.LatLng(lat, lng)
+
+      if(i > 0 && ordem == 0) {
+        indiceOrdens++;
+        ordens[indiceOrdens] = [];
+      }
+
+      ordens[indiceOrdens].push(coordenada);
+    }
+
+    for(var a = 0; a < ordens.length; a++) {
+      var array = ordens[a];
+      var cor = arrayCores[a];
+      console.log("cor = "+cor);
+      var caminho = new google.maps.Polyline({
+        path: array,
+        geodesic: true,
+        strokeColor: cor,
+        strokeOpacity: 1.0,
+        strokeWeight: 3
+      });
+
+      caminho.setMap(map);
+      linhas.push(caminho);
+    }
+  });
+}

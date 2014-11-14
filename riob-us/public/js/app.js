@@ -14,6 +14,14 @@ var app = {
 			$("#busLine").val(url[1]);
 			findBus(true);
 		}
+		$('input[type=checkbox]').change(
+			function(){
+				if (this.checked) {
+					desenhaShape();
+				} else {
+					limparCoordenadas();
+				}
+		});
     },
     geolocationSuccess: function(position){
         var lat = position.coords.latitude;
