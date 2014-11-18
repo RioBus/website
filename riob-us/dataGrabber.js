@@ -14,6 +14,25 @@
 	this old url does not have bus direction on its json response
 */
 
+var winston = require('winston'); // importing library that will help us write better logs.
+
+// function that returns our standart time stamp format. I'm using it for the loggers and for the json's 'lastUpdate'.
+function timeStamp () { return (new Date()).toUTCString()}
+
+/*	creating a custom log writer. It will log on console, in a file for erros and warnings, and in another file for info's. 
+	it seems that handling exceptions mean that it will log it and won't abort the code. im not sure. */
+var logger = new (winston.Logger)({ transports: [ new (winston.transports.Console)({colorize: true,
+																					timestamp: timeStamp}),
+												  new (winston.transports.File)({ filename: 'dataGrabberInfoLog.log',
+																				  handleExceptions: true,
+																				  colorize: true,
+																				  timestamp: timeStamp,
+																				  maxsize: 1*1024*1024, // size in bytes.
+																				  maxFiles: 2}),
+											// new (winston.transports.File)({ filename: 'dataGrabberStatisticLog.log' })
+												] });
+
+logger.on('error', function (err) { console.log(err) }); // winston logger can produce erros...
 
 var http = require('http'); // importing http module. it's a node's default module.
 var fs = require('fs');	// importing filesystem module. using fs to read riobus-config.json.
@@ -29,21 +48,22 @@ var httpGETCallback = function (response) {
 	httpGetIntervalCode = setTimeout(sendRequestAndGrabData, intervalTime);
 
 	if (response.statusCode == 200) { // we can only do stuff if we receive an statusCode of 200.
+		// printing http header from the server's response
+		// logger.info(' - HEADERS: ' + JSON.stringify(response.headers));
+
+		logger.info('Dados recebidos em ' + Date(Date.now()));
 
 		if (lastTimeWasBad) { // last response had an status code different from 200.
-			console.log("- Dadosabertos is fine now"); // logging notice that we are back on trail.
+			logger.info("Dadosabertos is fine now"); // logging notice that we are back on trail.
 			lastTimeWasBad = false; // this is reponse hat status code 200, so this one is fine.
 		}
-		// printing http header from the server's response
-		// console.log(' - HEADERS: ' + JSON.stringify(response.headers));
-		console.log('Dados recebidos em ' + Date(Date.now()));
 
 		var json = ''; // variable that will hold the json received from dadosabertos server
 
 		/*	registering function that will be called if there is an error on response. When response triggers 
 			the 'data' event. I don't know which types of error it could be. */
 		response.on('error', function(err) {
-		   console.log(" - We've had this error on dadosabertos RESPONSE: " + err);
+		   logger.warn("We've had this error on dadosabertos RESPONSE: " + err);
 		});
 
 		/*	in here we need to check if the response we are getting is compressed with gzip. if it is, we have to
@@ -75,11 +95,11 @@ var httpGETCallback = function (response) {
 			} catch (err) {
 				json = null; // if there was an error when parsing the json, it is invalid to our purpose.
 				if (err instanceof SyntaxError) {
-					console.log(" - we've had a syntax error while parsing json file from dadosabertos.",
-								"data will be an empty object");
+					logger.warn("We've had a syntax error while parsing json file from dadosabertos." +
+								" Data will be an empty object");
 				} else {
-					console.log(err.message);
-					console.log(err.stack);		
+					logger.error(err.message);
+					logger.error(err.stack);		
 				}
 			}
 
@@ -92,7 +112,7 @@ var httpGETCallback = function (response) {
 			// "COLUMNS" attribute change to an array with size 1 and its content is'MENSAGEM'.
 			if (json['COLUMNS'][0] === "MENSAGEM") {
 				// we don't care about the message. this is the only message in the whole service.
-				console.log(" - Dadosabertos said:", json['DATA'][0][0]) // message comes inside 'DATA', nested 2 times.
+				logger.warn("Dadosabertos said:", json['DATA'][0][0]) // message comes inside 'DATA', nested 2 times.
 				json = null; // it means this json is invalid to our purpose.
 			}
 
@@ -164,7 +184,7 @@ var httpGETCallback = function (response) {
 				// }
 
 				// sending 'data', 'json', 'orders' and lastUpdate to parent thread.
-				process.send({data: data, json: json.DATA, orders: orders, lastUpdate: (new Date()).toUTCString()});
+				process.send({data: data, json: json.DATA, orders: orders, lastUpdate: timeStamp ()});
 				/*	lastUpdate informs when we received the last successful response. transforming date to a 
 					readable UTC time string. it looks like this: "Sun Nov 02 2014 16:26:12 GMT-0200 (BRST)"*/
 
@@ -191,15 +211,15 @@ var httpGETCallback = function (response) {
 	} else { // if response's statusCode wasn't 200, than it's bad new.
 		lastTimeWasBad = true;
 		if (response.statusCode == 'ECONNRESET') { // statusCode for when remote server close the connection on us.
-			console.log(" - Dadosabertos server closed the connection, code:", response.statusCode);
+			logger.warn("Dadosabertos server closed the connection, code: " + response.statusCode);
 		} else if (response.statusCode == 503) { // statusCode for when remote server is unavailable.
-			console.log(" - Dadosabertos server was unavailable, code:", response.statusCode);
+			logger.warn("Dadosabertos server was unavailable, code: " + response.statusCode);
 		} else if (response.statusCode == 404) { // statusCode for when remote server can't find request (not found).
-			console.log(" - Dadosabertos server could not find anything matching the url, code:", response.statusCode);
+			logger.warn("Dadosabertos server could not find anything matching the url, code: " + response.statusCode);
 		} else if (response.statusCode == 302) { // statusCode for when we remove server indicates url redirection.
-			console.log(" - Dadosabertos server wants us to redirect our request to a new url, code:", response.statusCode);
+			logger.warn("Dadosabertos wants us to redirect our request to a new url, code: " + response.statusCode);
 		} else {
-			console.log(" - Dadosabertos responded with statuscode:", response.statusCode);
+			logger.warn("Dadosabertos responded with statuscode: " + response.statusCode);
 		}
 	}
 }
@@ -238,14 +258,14 @@ function sendRequestAndGrabData() {
 	/*	setting a callback function that runs when our request's times out. when the request times out, the connection 
 		is still up. It's nothing more than a simple javsascript 'setTimeout()' scheduler underneath this call. */
 	requestGet.setTimeout(config.timeout, function () {
-		console.log((new Date()).toUTCString(), ' - our REQUEST has timed out.');
+		logger.warn('Our REQUEST has timed out.');
 		requestGet.abort(); // this makes the request emit an 'error' event. because it force closes the current connection.
 	})
 
 	// registering function that will be called if our request triggers an 'error' event.
 	requestGet.on('error', function (e) { 
 		lastTimeWasBad = true; // because errors are bad. we treat this variable in the next sucessful response.
-		console.log((new Date()).toUTCString(),' - our REQUEST has had this error: ' + e.message); //printing error message.
+		logger.warn('Our REQUEST has had this error: ' + e.message); //printing error message.
 		httpGetIntervalCode = setTimeout(sendRequestAndGrabData, intervalTime); // on erros, resend request.
 		// calling 'clearInterval(httpGetIntervalCode)' stops the scheduled function corresponding to 'httpGetIntervalCode'.
 	});
