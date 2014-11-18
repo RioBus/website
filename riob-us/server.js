@@ -1,11 +1,6 @@
 /*	things to do in this code
 	1- keep updating comments as code changes.
-This way, we don't need to restart the code if those things change.
-	2- delete comments that print information that is useless for this code. bus line being queried.
-This kind of information is useful for someone else, somewhere else, but not here, not for this code.
-	3- add the code that will serve the website pages
 */
-
 
 /* ==================
 	this is the server code. where we are going to serve a rest interface and the website pages.
@@ -16,8 +11,7 @@ var fork = require('child_process').fork, // child processes are different threa
 	child = fork(__dirname + "/dataGrabber.js");
 
 /* I am using this fakeDataGrabber as a temporary dataGrabber impersonation for the times when dadosabertos server
-	is down...
-*/
+	is down... */
 // var fork = require('child_process').fork,
 // 	child = fork(__dirname + "/fakeDataGrabber.js");
 
