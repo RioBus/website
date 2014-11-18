@@ -17,20 +17,24 @@
 var winston = require('winston'); // importing library that will help us write better logs.
 
 // function that returns our standart time stamp format. I'm using it for the loggers and for the json's 'lastUpdate'.
-function timeStamp () { return (new Date()).toUTCString()}
+function timeStamp () {return (new Date()).toLocaleString()};
 
 /*	creating a custom log writer. It will log on console, in a file for erros and warnings, and in another file for info's. 
 	it seems that handling exceptions mean that it will log it and won't abort the code. im not sure. */
-var logger = new (winston.Logger)({ transports: [ new (winston.transports.Console)({colorize: true,
-																					timestamp: timeStamp}),
-												  new (winston.transports.File)({ filename: 'dataGrabberInfoLog.log',
-																				  handleExceptions: true,
-																				  colorize: true,
-																				  timestamp: timeStamp,
-																				  maxsize: 1*1024*1024, // size in bytes.
-																				  maxFiles: 2}),
-											// new (winston.transports.File)({ filename: 'dataGrabberStatisticLog.log' })
-												] });
+var consoleTransportOptions = {
+	colorize: true,
+	timestamp: timeStamp
+};
+var fileTransportOptions = { 
+	filename: 'dataGrabberInfoLog.log',
+	handleExceptions: true,
+	colorize: true,
+	timestamp: timeStamp,
+	maxsize: 1*1024*1024, // size in bytes.
+	maxFiles: 2
+};
+var logger = new (winston.Logger)({ transports: [ new (winston.transports.Console)(consoleTransportOptions),
+												  new (winston.transports.File)(fileTransportOptions) ] });
 
 logger.on('error', function (err) { console.log(err) }); // winston logger can produce erros...
 
@@ -51,7 +55,7 @@ var httpGETCallback = function (response) {
 		// printing http header from the server's response
 		// logger.info(' - HEADERS: ' + JSON.stringify(response.headers));
 
-		logger.info('Dados recebidos em ' + Date(Date.now()));
+		logger.info('Dados recebidos');
 
 		if (lastTimeWasBad) { // last response had an status code different from 200.
 			logger.info("Dadosabertos is fine now"); // logging notice that we are back on trail.
@@ -187,6 +191,7 @@ var httpGETCallback = function (response) {
 				process.send({data: data, json: json.DATA, orders: orders, lastUpdate: timeStamp ()});
 				/*	lastUpdate informs when we received the last successful response. transforming date to a 
 					readable UTC time string. it looks like this: "Sun Nov 02 2014 16:26:12 GMT-0200 (BRST)"*/
+
 
 				/*	this is the part where we should store the data in a database.
 					by now, we just print some shit about the response and write a json file with the data organized
