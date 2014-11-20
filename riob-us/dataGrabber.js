@@ -30,8 +30,6 @@ var fileTransportOptions = {
 	handleExceptions: true,
 	colorize: true, // color is only visible on command line tool.
 	timestamp: timeStamp,
-	maxsize: 1*1024*1024, // size in bytes.
-	maxFiles: 2
 };
 var logger = new (winston.Logger)({ transports: [ new (winston.transports.Console)(consoleTransportOptions),
 												  new (winston.transports.File)(fileTransportOptions) ] });
@@ -47,12 +45,12 @@ var lastStatus = 0; // variable is set to status code responded by dadosabertos 
 // function that will be called when we receive a response from dadosabertos server.
 var httpGETCallback = function (response) {
 
-	/*	We are sending a request only after we get a response or, if we don't get one, an 'intervalTime' 
+	/*	We are sending a request only an 'intervalTime' after we get a response or, if we don't get one, an 'intervalTime' 
 		after our request times out (when timeout, wait for a few seconds and send another request). */
 	httpGetIntervalCode = setTimeout(sendRequestAndGrabData, intervalTime);
 
-	if (response.statusCode == 200) { // we can only do stuff if we receive an statusCode of 200.
-		// logger.info(' - HEADERS: ' + JSON.stringify(response.headers)); // printing http header from server's response.
+	if (response.statusCode == 200) { // we can only do stuff if we receive an statusCode of 200 in the http protocol.
+		// console.log(' - HEADERS: ' + JSON.stringify(response.headers)); // printing http header from server's response.
 
 		var json = ''; // variable that will hold the json received from dadosabertos server.
 
@@ -173,14 +171,14 @@ var httpGETCallback = function (response) {
 				for (var i = json.DATA.length - 1; i >= 0; i--) {
 					var bus = json.DATA[i];
 					var key = "" + bus[2]; // string that will be the key for the hashmap structure. 
-					// "" + NUMBER, parses the NUMBER to a string. javascript's fastest way to parse number to string.
+					// "" + NUMBER, parses the NUMBER to a string. javascript's easiest way to parse number to string.
 					if (data[key]){ // if key already exists in data structure.
 						data[key].push(bus); // add this bus to this key (add bus to its respective line).
 					} else { // if key doesn't exist.
 						data[key] = [bus]; // instantiate an array in the key with this bus inside it.
 					}
 
-					orders[bus[1]] = [bus];
+					orders[bus[1]] = [bus]; // key is bus order value. value is the whole bus information.
 					/*	array inside array, because on retrieval it will come nested, just like when we retrive a bus line.
 						when we retrieve a bus line (data[<bus line>]), we also get an array of arrays. */
 				}

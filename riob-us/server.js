@@ -22,8 +22,6 @@ var fileTransportOptions = {
 	handleExceptions: true, // i dont know if we shouldn't abort code on exceptions. i don't know what might happen.
 	colorize: true, // color is only visible on command line tool.
 	timestamp: timeStamp,
-	maxsize: 1*1024*1024, // size in bytes.
-	maxFiles: 2
 };
 var logger = new (winston.Logger)({ transports: [ new (winston.transports.Console)(consoleTransportOptions),
 												  new (winston.transports.File)(fileTransportOptions) ] });
