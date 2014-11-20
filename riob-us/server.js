@@ -6,14 +6,36 @@
 	this is the server code. where we are going to serve a rest interface and the website pages.
 */
 
+var winston = require('winston'); // importing library that will help us write better logs.
+
+// function that returns our standart time stamp format. I'm using it for the loggers and for the json's 'lastUpdate'.
+function timeStamp () {return (new Date()).toLocaleString()} 
+
+/*	creating a custom log writer. It will log on console and in a file. 
+	it seems that handling exceptions mean that it will log it and won't abort the code. im not sure. */
+var consoleTransportOptions = {
+	colorize: true, // color is only visible on command line tool.
+	timestamp: timeStamp
+};
+var fileTransportOptions = { 
+	filename: 'serverInfoLog.log',
+	handleExceptions: true, // i dont know if we shouldn't abort code on exceptions. i don't know what might happen.
+	colorize: true, // color is only visible on command line tool.
+	timestamp: timeStamp,
+	maxsize: 1*1024*1024, // size in bytes.
+	maxFiles: 2
+};
+var logger = new (winston.Logger)({ transports: [ new (winston.transports.Console)(consoleTransportOptions),
+												  new (winston.transports.File)(fileTransportOptions) ] });
+
 // we start by calling the dataGrabber.js file in another thread.
 var fork = require('child_process').fork, // child processes are different threads that are simply new node threads.
-	child = fork(__dirname + "/dataGrabber.js");
+	channelToDataGrabber = fork(__dirname + "/dataGrabber.js");
 
 /* I am using this fakeDataGrabber as a temporary dataGrabber impersonation for the times when dadosabertos server
 	is down... */
 // var fork = require('child_process').fork,
-// 	child = fork(__dirname + "/fakeDataGrabber.js");
+// 	channelToDataGrabber = fork(__dirname + "/fakeDataGrabber.js");
 
 // 'data' will hold all the bus lines,with their respective busses, collected by the dataGrabber.js thread.
 var data = {a: "no busses yet"};
@@ -21,15 +43,18 @@ var data = {a: "no busses yet"};
 var json = {a: "no busses yet"};
 // 'orders' will hold all busses, queryble by bus order.
 var orders = {a: "no busses yet"};
-// 'lastUpdate' will hold the date and time of the last successful response we've got from dadosabertos.
-var lastUpdate;
+var lastUpdate; // 'lastUpdate' will hold the date and time of the last successful response we've got from dadosabertos.
+var lastStatus; // 'lastStatus' will hold the case that indicates whether dataGabber was sucessful or how much it wasn't.
 
 // dataGrabber will send everything collected to this server.js thread.
-child.on('message', function (message) { // 'message' is the object passed from the child process.
+channelToDataGrabber.on('message', function (message) { // 'message' is the object passed from the child process.
 	data = message.data; // copying child processes' 'data' over our current 'data'.
 	json = message.json  // copying child processes' 'json' over our current 'json'.
 	orders = message.orders; // copying child processes' 'orders' over our current 'orders'.
 	lastUpdate = message.lastUpdate; // copying child processes' 'lastUpdate' over our current 'lastUpdate'.
+	lastStatus = message.lastStatus; // copying child processes' 'lastStatus' over our current 'lastStatus'.
+	json.LASTUPDATE = lastUpdate; // adding 'LASTUPDATE' attribute to 'json'.
+	json.LASTSTATUS = lastStatus; // adding 'LASTSTATUS' attribute to 'json'.
 })
 
 
@@ -41,11 +66,13 @@ var compression = require('compression') // compression middleware to compress f
 var app = express(); // initializing a new express object (as if javascript were object oriented).
 app.use(compression()); // compress with gzip every content that will be sent.
 
-/* ++++++++++++++++++++++++++++++ ROUTES ++++++++++++++++++++++++++++++ */
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++ ROUTES +++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 //routing for "riob.us/" requests
 app.get('/', function (req, res, next) {
-	console.log(" - user's referer is: " + req.headers['referer']);
+	logger.info("User's referer is: " + req.headers['referer']);
 
 	// if we can find the 'linha' and 's' paramaters in the request url, it means the request is searching for a bus line.
 	if (Object.keys(req.query).length > 0) { // checking if there are any parameters in the request.
@@ -86,16 +113,14 @@ app.get('/', function (req, res, next) {
 			//busLine and busOrder were not defined. we could send a 404 bad request.
 		}
 	} else { // request has no paramaters. we have to send the index.html file.
-		next() // as we are using express.static middleware, we can here move to the next middleware
+		next() // in this case, move to next matching route.
 	}
 })
 
 //routing for "riob.us/all" requests. returns all busses.
 app.get('/all', function (req, res, next) {
-	// returnuning the dadosabertos server json with one more attribute, 'lastUpdate'.
-	res.jsonp({COLUMNS:["DATAHORA","ORDEM","LINHA","LATITUDE","LONGITUDE","VELOCIDADE", "DIRECAO"], 
-				DATA: json, // only 'DATA' value from dadosabertos server.
-				LASTUPDATE: lastUpdate});
+	// returnuning the dadosabertos server json with two more attributes, 'LASTUPDATE' and 'LASTSTATUS'.
+	res.jsonp(json);
 })
 
 /*	using express.static middleware to serve static files. it only serves existing files and calls next() 
@@ -119,7 +144,18 @@ app.get('/ordem/:busOrder', function (req, res, next) {
 	sendQueriedItemAsJson(res, null, busOrder);
 })
 
-/* ++++++++++++++++++++++++++++++ ROUTES ++++++++++++++++++++++++++++++ */
+app.get('/log/dataGrabber', function (req, res, next) {
+	sendJoinedLogLines('./dataGrabberInfoLog.log', 40, res); // query for last log lines and send them on response.
+})
+
+app.get('/log/server', function (req, res, next) {
+	sendJoinedLogLines('./serverInfoLog.log', 40, res); // query for last log lines and send them on response.
+})
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++ ROUTES +++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
 
 // reading the port to which our server should listen, from our JSON configuration file.
 var configServer = JSON.parse(fs.readFileSync(__dirname + "/riobus-config.json")).server;
@@ -130,7 +166,7 @@ var server = app.listen(configServer.port, function () {
 	var host = server.address().address;
 	var port = server.address().port;
 
-	console.log('Server listening at http://%s:%s', host, port);
+	logger.info('Server listening at http://%s:%s', host, port);
 
 })
 
@@ -150,7 +186,8 @@ function sendQueriedItemAsJson (res, busLinesString, busOrdersString) {
 	// send json on response.
 	res.jsonp({COLUMNS:["DATAHORA","ORDEM","LINHA","LATITUDE","LONGITUDE","VELOCIDADE", "DIRECAO"], 
 				DATA: returnData, // our return data enters here.
-				LASTUPDATE: lastUpdate});
+				LASTUPDATE: lastUpdate,
+				LASTSTATUS: lastStatus});
 }
 
 // spliting the busses (or orders), removing duplicates and getting an array with the 10 first items.
@@ -172,11 +209,59 @@ function returnQueriedItemsAsArray (paramaterString) {
 	return Object.keys(hash); // now get just the attribute names of the object (the keys of the hash).
 }
 
+/*	concatenate values of every key in 'queriedItems' from given 'structure' to 'returnArray'.
+	'structure' is either 'data' or 'json'. */
 function selectAndConcatenateData (structure, queriedItems, returnArray) {
-	for (var i = queriedItems.length - 1; i >= 0; i--) { // for each bus line in the query.
+	for (var i = queriedItems.length - 1; i >= 0; i--) { // for each bus line in the query. or bus order.
 		var item = structure[queriedItems[i]]; // get the array containing all busses in it.
 		if (item) // if this array exists.
 			returnArray = returnArray.concat(item); // concatenate with what's inside the return variable.
 	};
 	return returnArray;
+}
+
+/*	query for logs inside in 'fileName' asynchronously, without getting the whole file on memory, and call calback with
+	the last lines in second parameter of the callback function. Number of lines is specified by amountOfLastLines. */
+function getLastNLogLines(filename, amountOfLastLines, callback) {
+    var stream = fs.createReadStream(filename, {
+        flags: 'r',
+        encoding: 'utf-8',
+        fd: null,
+        mode: 0666,
+        bufferSize: 64 * 1024
+    });
+
+    var currentChunk = ''; // will hold the current chunk got from file.
+    var previousChunk = ''; // will hold the previous chunk got from file.
+    stream.on('data', function (data) {
+        previousChunk = currentChunk; // moving current chunk pointer to 'previousChunk' variable.
+        currentChunk = data; // moving new chunk pointer to 'currentChunk' variable. we have a maximun of 2 chunks in memory.
+    });
+
+    stream.on('error', function () {
+        callback('Error when reading log file', null);
+    });
+
+    stream.on('end', function () {
+        var arrayOfLines = previousChunk + currentChunk; // concatening the last 2 chunks.
+        arrayOfLines = arrayOfLines.split('\n').splice(-amountOfLastLines); // split into lines and slice the last lines.
+        if (arrayOfLines[arrayOfLines.length-1] == '') // if last line is empty.
+            arrayOfLines.pop(); // pop it out.
+        callback(null, arrayOfLines); // returning the last lines to callback.
+    });
+}
+
+// call the function that get the last log lines, join then in one string, in reverse order, and send them on response.
+function sendJoinedLogLines(fileName, amountOfLastLines, res) {
+	getLastNLogLines(fileName, amountOfLastLines, function (err, lines) {
+		if (err) throw err;
+
+		var returnText = "timestamp\t\t\t\t\tlevel\tmessage\n"; // header text for the browser.
+		for (var i = lines.length - 1; i >= 0; i--) {
+			var log = JSON.parse(lines[i]);
+			returnText += log.timestamp + "\t" + log.level + "\t" + log.message + "\n"; // making it a string.
+		};
+		res.set('Content-Type', 'text/plain') // setting header.
+		res.send(returnText); // sending content.
+	})
 }
