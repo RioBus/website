@@ -144,11 +144,11 @@ app.get('/ordem/:busOrder', function (req, res, next) {
 })
 
 app.get('/log/dataGrabber', function (req, res, next) {
-	retriveAndSendLog('./dataGrabberLog.log', 40, res); // query for last log lines and send them on response.
+	sendLastLines(dataGrabberLogHolder,res)
 })
 
 app.get('/log/server', function (req, res, next) {
-	retriveAndSendLog('./serverLog.log', 40, res); // query for last log lines and send them on response.
+	sendLastLines(serverLogHolder,res)
 })
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
@@ -219,18 +219,34 @@ function selectAndConcatenateData (structure, queriedItems, returnArray) {
 	return returnArray;
 }
 
-// open the log file specified by 'fileName', retrieve a 'numberOfLastLines' and send them as a string on response.
-function retriveAndSendLog(fileName, numberOfLastLines, response) {
-	var sliceFile = sf(fileName, opts={}); // creates an slice-file object.
-	sliceFile.sliceReverse(-numberOfLastLines, function (err, lines) { // look for the last 'numberOfLastLines' lines.
-		if (err) throw err;
+var numberOfLastLines = 40; // number of lines to get from the end of log files.
+var stream = require('stream'); // using stream library to create an intance of writeble stream.
+function LogHolder() { // creating a writeable stream class
+	this.writableStrem = new stream.Writable(); // instantiating a new writable object.
+	this.writableStrem.logs = [] // adding an attribute that will hold log messages.
+	this.writableStrem._write = function (chunk, encoding, done) { // defining stream's write function.
+		var log = JSON.parse(chunk.toString()) // parse one line as a javascript object.
+		this.logs.push(log.timestamp + "\t" + log.level + "\t" + log.message + "\n"); // making it a string.
+		if (this.logs.length > numberOfLastLines) // if array has more than maximum of elements.
+			this.logs.shift() // drop first element.
+		done();
+	};
+	return this.writableStrem; // return new object.
+}
 
-		var returnText = "timestamp\t\t\t\t\tlevel\tmessage\n"; // header text for the browser.
-		for (var i = 0; i < lines.length; i++) { // for each line retrieved.
-			var log = JSON.parse(lines[i]) // parse one line as a javascript object.
-			returnText += log.timestamp + "\t" + log.level + "\t" + log.message + "\n"; // making it a string.
-		}
-		response.set('Content-Type', 'text/plain') // setting header.
-		response.send(returnText); // sending content.
-	})
+var dataGrabberLogHolder = new LogHolder(); // creating an object to hold dataGrabber's logs.
+var serverLogHolder = new LogHolder(); // creating an object to hold server's logs.
+var sf = require('slice-file'); // library that can read files backwards and retrive the last lines using small memory.
+// geting last lines of each file and piping them to their respective log holder object.
+sf('./dataGrabberLog.log', opts={}).follow(-numberOfLastLines).pipe(dataGrabberLogHolder);
+sf('./serverLog.log', opts={}).follow(-numberOfLastLines).pipe(serverLogHolder);
+
+// concatenates each log line from specified 'logHolder' and send it on response.
+function sendLastLines(logHolder, response) {
+	var returnText = "timestamp\t\t\t\t\tlevel\tmessage\n"; // header text for the browser.
+	for (var i = logHolder.logs.length - 1; i >= 0; i--) {
+		returnText += logHolder.logs[i]
+	};
+	response.set('Content-Type', 'text/plain') // setting header.
+	response.send(returnText); // sending content.
 }
