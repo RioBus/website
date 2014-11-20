@@ -26,7 +26,7 @@ var consoleTransportOptions = {
 	timestamp: timeStamp
 };
 var fileTransportOptions = { 
-	filename: 'dataGrabberInfoLog.log',
+	filename: 'dataGrabberLog.log',
 	handleExceptions: true,
 	colorize: true, // color is only visible on command line tool.
 	timestamp: timeStamp,
