@@ -18,7 +18,7 @@ var consoleTransportOptions = {
 	timestamp: timeStamp
 };
 var fileTransportOptions = { 
-	filename: 'serverInfoLog.log',
+	filename: 'serverLog.log',
 	handleExceptions: true, // i dont know if we shouldn't abort code on exceptions. i don't know what might happen.
 	colorize: true, // color is only visible on command line tool.
 	timestamp: timeStamp,
@@ -60,6 +60,7 @@ var express = require('express'); // we are using express as our middleware. it 
 var url = require('url'); // we use url module to parse the url in the request, sent to us, and extract the bus line.
 var fs = require('fs'); // using fs to read riobus-config.json.
 var compression = require('compression') // compression middleware to compress files before sending on response.
+var sf = require('slice-file'); // library that can read files backwards and retrive the last lines using small memory.
 
 var app = express(); // initializing a new express object (as if javascript were object oriented).
 app.use(compression()); // compress with gzip every content that will be sent.
@@ -143,11 +144,11 @@ app.get('/ordem/:busOrder', function (req, res, next) {
 })
 
 app.get('/log/dataGrabber', function (req, res, next) {
-	sendJoinedLogLines('./dataGrabberInfoLog.log', 40, res); // query for last log lines and send them on response.
+	retriveAndSendLog('./dataGrabberLog.log', 40, res); // query for last log lines and send them on response.
 })
 
 app.get('/log/server', function (req, res, next) {
-	sendJoinedLogLines('./serverInfoLog.log', 40, res); // query for last log lines and send them on response.
+	retriveAndSendLog('./serverLog.log', 40, res); // query for last log lines and send them on response.
 })
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
@@ -218,48 +219,18 @@ function selectAndConcatenateData (structure, queriedItems, returnArray) {
 	return returnArray;
 }
 
-/*	query for logs inside in 'fileName' asynchronously, without getting the whole file on memory, and call calback with
-	the last lines in second parameter of the callback function. Number of lines is specified by amountOfLastLines. */
-function getLastNLogLines(filename, amountOfLastLines, callback) {
-    var stream = fs.createReadStream(filename, {
-        flags: 'r',
-        encoding: 'utf-8',
-        fd: null,
-        mode: 0666,
-        bufferSize: 64 * 1024
-    });
-
-    var currentChunk = ''; // will hold the current chunk got from file.
-    var previousChunk = ''; // will hold the previous chunk got from file.
-    stream.on('data', function (data) {
-        previousChunk = currentChunk; // moving current chunk pointer to 'previousChunk' variable.
-        currentChunk = data; // moving new chunk pointer to 'currentChunk' variable. we have a maximun of 2 chunks in memory.
-    });
-
-    stream.on('error', function () {
-        callback('Error when reading log file', null);
-    });
-
-    stream.on('end', function () {
-        var arrayOfLines = previousChunk + currentChunk; // concatening the last 2 chunks.
-        arrayOfLines = arrayOfLines.split('\n').splice(-amountOfLastLines); // split into lines and slice the last lines.
-        if (arrayOfLines[arrayOfLines.length-1] == '') // if last line is empty.
-            arrayOfLines.pop(); // pop it out.
-        callback(null, arrayOfLines); // returning the last lines to callback.
-    });
-}
-
-// call the function that get the last log lines, join then in one string, in reverse order, and send them on response.
-function sendJoinedLogLines(fileName, amountOfLastLines, res) {
-	getLastNLogLines(fileName, amountOfLastLines, function (err, lines) {
+// open the log file specified by 'fileName', retrieve a 'numberOfLastLines' and send them as a string on response.
+function retriveAndSendLog(fileName, numberOfLastLines, response) {
+	var sliceFile = sf(fileName, opts={}); // creates an slice-file object.
+	sliceFile.sliceReverse(-numberOfLastLines, function (err, lines) { // look for the last 'numberOfLastLines' lines.
 		if (err) throw err;
 
 		var returnText = "timestamp\t\t\t\t\tlevel\tmessage\n"; // header text for the browser.
-		for (var i = lines.length - 1; i >= 0; i--) {
-			var log = JSON.parse(lines[i]);
+		for (var i = 0; i < lines.length; i++) { // for each line retrieved.
+			var log = JSON.parse(lines[i]) // parse one line as a javascript object.
 			returnText += log.timestamp + "\t" + log.level + "\t" + log.message + "\n"; // making it a string.
-		};
-		res.set('Content-Type', 'text/plain') // setting header.
-		res.send(returnText); // sending content.
+		}
+		response.set('Content-Type', 'text/plain') // setting header.
+		response.send(returnText); // sending content.
 	})
 }
