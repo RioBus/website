@@ -18,12 +18,10 @@ var consoleTransportOptions = {
 	timestamp: timeStamp
 };
 var fileTransportOptions = { 
-	filename: 'serverInfoLog.log',
+	filename: 'serverLog.log',
 	handleExceptions: true, // i dont know if we shouldn't abort code on exceptions. i don't know what might happen.
 	colorize: true, // color is only visible on command line tool.
 	timestamp: timeStamp,
-	maxsize: 1*1024*1024, // size in bytes.
-	maxFiles: 2
 };
 var logger = new (winston.Logger)({ transports: [ new (winston.transports.Console)(consoleTransportOptions),
 												  new (winston.transports.File)(fileTransportOptions) ] });
@@ -48,11 +46,11 @@ var lastStatus; // 'lastStatus' will hold the case that indicates whether dataGa
 
 // dataGrabber will send everything collected to this server.js thread.
 channelToDataGrabber.on('message', function (message) { // 'message' is the object passed from the child process.
-	data = message.data; // copying child processes' 'data' over our current 'data'.
-	json = message.json  // copying child processes' 'json' over our current 'json'.
-	orders = message.orders; // copying child processes' 'orders' over our current 'orders'.
-	lastUpdate = message.lastUpdate; // copying child processes' 'lastUpdate' over our current 'lastUpdate'.
-	lastStatus = message.lastStatus; // copying child processes' 'lastStatus' over our current 'lastStatus'.
+	data = message.data || data; // copying child processes' 'data' over our current 'data' if it exists on 'message'.
+	json = message.json || json; // copying child processes' 'json' over our current 'json' if it exists on 'message'.
+	orders = message.orders || orders; // copying child processes' 'orders' over our current 'orders' if it exists.
+	lastUpdate = message.lastUpdate || lastUpdate; // copying child processes' 'lastUpdate' over our current 'lastUpdate'.
+	lastStatus = message.lastStatus || lastStatus; // copying child processes' 'lastStatus' over our current 'lastStatus'.
 	json.LASTUPDATE = lastUpdate; // adding 'LASTUPDATE' attribute to 'json'.
 	json.LASTSTATUS = lastStatus; // adding 'LASTSTATUS' attribute to 'json'.
 })
@@ -62,6 +60,7 @@ var express = require('express'); // we are using express as our middleware. it 
 var url = require('url'); // we use url module to parse the url in the request, sent to us, and extract the bus line.
 var fs = require('fs'); // using fs to read riobus-config.json.
 var compression = require('compression') // compression middleware to compress files before sending on response.
+var sf = require('slice-file'); // library that can read files backwards and retrive the last lines using small memory.
 
 var app = express(); // initializing a new express object (as if javascript were object oriented).
 app.use(compression()); // compress with gzip every content that will be sent.
@@ -145,13 +144,19 @@ app.get('/ordem/:busOrder', function (req, res, next) {
 })
 
 app.get('/log/dataGrabber', function (req, res, next) {
-	sendJoinedLogLines('./dataGrabberInfoLog.log', 40, res); // query for last log lines and send them on response.
+	res.set('Content-Type', 'text/plain') // setting header.
+	res.send(getLasLogLines(dataGrabberLogHolder)); // sending content.
 })
 
 app.get('/log/server', function (req, res, next) {
-	sendJoinedLogLines('./serverInfoLog.log', 40, res); // query for last log lines and send them on response.
+	res.set('Content-Type', 'text/plain') // setting header.
+	res.send(getLasLogLines(serverLogHolder)); // sending content.
 })
 
+app.get('/log', function (req, res, next) {
+	res.set('Content-Type', 'text/plain') // setting header.
+	res.send(getLasLogLines(dataGrabberLogHolder) + "\n" + getLasLogLines(serverLogHolder)); // sending content.
+})
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++ ROUTES +++++++++++++++++++++++++++++++++++++++++++++ */
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
@@ -220,48 +225,34 @@ function selectAndConcatenateData (structure, queriedItems, returnArray) {
 	return returnArray;
 }
 
-/*	query for logs inside in 'fileName' asynchronously, without getting the whole file on memory, and call calback with
-	the last lines in second parameter of the callback function. Number of lines is specified by amountOfLastLines. */
-function getLastNLogLines(filename, amountOfLastLines, callback) {
-    var stream = fs.createReadStream(filename, {
-        flags: 'r',
-        encoding: 'utf-8',
-        fd: null,
-        mode: 0666,
-        bufferSize: 64 * 1024
-    });
-
-    var currentChunk = ''; // will hold the current chunk got from file.
-    var previousChunk = ''; // will hold the previous chunk got from file.
-    stream.on('data', function (data) {
-        previousChunk = currentChunk; // moving current chunk pointer to 'previousChunk' variable.
-        currentChunk = data; // moving new chunk pointer to 'currentChunk' variable. we have a maximun of 2 chunks in memory.
-    });
-
-    stream.on('error', function () {
-        callback('Error when reading log file', null);
-    });
-
-    stream.on('end', function () {
-        var arrayOfLines = previousChunk + currentChunk; // concatening the last 2 chunks.
-        arrayOfLines = arrayOfLines.split('\n').splice(-amountOfLastLines); // split into lines and slice the last lines.
-        if (arrayOfLines[arrayOfLines.length-1] == '') // if last line is empty.
-            arrayOfLines.pop(); // pop it out.
-        callback(null, arrayOfLines); // returning the last lines to callback.
-    });
+var amountOfLines = configServer.numberOfLastLogLines; // number of lines to get from the end of log files.
+var stream = require('stream'); // using stream library to create an intance of writable stream.
+function LogHolder() { // creating a writeable stream class
+	this.writableStrem = new stream.Writable(); // instantiating a new writable object.
+	this.writableStrem.logs = [] // adding an attribute that will hold log messages.
+	this.writableStrem._write = function (chunk, encoding, done) { // defining stream's write function.
+		var log = JSON.parse(chunk.toString()) // parse one line as a javascript object.
+		this.logs.push(log.timestamp + "\t" + log.level + "\t" + log.message + "\n"); // making it a string.
+		if (this.logs.length > amountOfLines) // if array has more than maximum of elements.
+			this.logs.shift() // drop first element.
+		done();
+	};
+	return this.writableStrem; // return new object.
 }
 
-// call the function that get the last log lines, join then in one string, in reverse order, and send them on response.
-function sendJoinedLogLines(fileName, amountOfLastLines, res) {
-	getLastNLogLines(fileName, amountOfLastLines, function (err, lines) {
-		if (err) throw err;
+var dataGrabberLogHolder = new LogHolder(); // creating an object to hold dataGrabber's logs.
+var serverLogHolder = new LogHolder(); // creating an object to hold server's logs.
+var sf = require('slice-file'); // library that can read files backwards and retrive the last lines using small memory.
+// geting last lines of each file and piping them to their respective log holder object.
+sf('./dataGrabberLog.log', opts={}).follow(-amountOfLines).pipe(dataGrabberLogHolder); // 'sf' is a slice-file instance.
+sf('./serverLog.log', opts={}).follow(-amountOfLines).pipe(serverLogHolder); // 'follow()' watches for new messages.
+// 'pipe' sends all new messages to the writable stream on its paramater.
 
-		var returnText = "timestamp\t\t\t\t\tlevel\tmessage\n"; // header text for the browser.
-		for (var i = lines.length - 1; i >= 0; i--) {
-			var log = JSON.parse(lines[i]);
-			returnText += log.timestamp + "\t" + log.level + "\t" + log.message + "\n"; // making it a string.
-		};
-		res.set('Content-Type', 'text/plain') // setting header.
-		res.send(returnText); // sending content.
-	})
+// concatenates each log line from specified 'logHolder' and send it on response.
+function getLasLogLines(logHolder, response) {
+	var returnText = "timestamp\t\t\t\t\tlevel\tmessage\n"; // header text for the browser.
+	for (var i = logHolder.logs.length - 1; i >= 0; i--) {
+		returnText += logHolder.logs[i]
+	};
+	return returnText;
 }

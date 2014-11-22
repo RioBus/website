@@ -26,12 +26,10 @@ var consoleTransportOptions = {
 	timestamp: timeStamp
 };
 var fileTransportOptions = { 
-	filename: 'dataGrabberInfoLog.log',
+	filename: 'dataGrabberLog.log',
 	handleExceptions: true,
 	colorize: true, // color is only visible on command line tool.
 	timestamp: timeStamp,
-	maxsize: 1*1024*1024, // size in bytes.
-	maxFiles: 2
 };
 var logger = new (winston.Logger)({ transports: [ new (winston.transports.Console)(consoleTransportOptions),
 												  new (winston.transports.File)(fileTransportOptions) ] });
@@ -42,28 +40,28 @@ var http = require('http'); // importing http module. it's a node's default modu
 var fs = require('fs');	// importing filesystem module. using fs to read riobus-config.json.
 var zlib = require('zlib'); // importing zlib module that we will use to decompress the JSON compressed in gzip.
 
-var lastStatus = 0; // variable is set to status code responded by dadosabertos in its last data.
+// object that represents what happend in the last time we requested for data and how many times this has been repeating.
+var lastStatus = {label: 0, // 'label' is the identification of what happened.
+				counter: 0} // 'counter' counts it. zero means an unpredicted situation has happened.
+
 
 // function that will be called when we receive a response from dadosabertos server.
 var httpGETCallback = function (response) {
 
-	/*	We are sending a request only after we get a response or, if we don't get one, an 'intervalTime' 
+	/*	registering function that will be called if there is an error on response. When response triggers 
+		the 'data' event. I don't know which types of error there could be. */
+	response.on('error', function (err) {
+		logOnGuardsSendLastStatus('warn', "We've had this error on dadosabertos RESPONSE: " + err, err.message, true);
+	});
+
+	/*	We are sending a request only an 'intervalTime' after we get a response or, if we don't get one, an 'intervalTime' 
 		after our request times out (when timeout, wait for a few seconds and send another request). */
 	httpGetIntervalCode = setTimeout(sendRequestAndGrabData, intervalTime);
 
-	if (response.statusCode == 200) { // we can only do stuff if we receive an statusCode of 200.
-		// logger.info(' - HEADERS: ' + JSON.stringify(response.headers)); // printing http header from server's response.
+	if (response.statusCode == 200) { // we can only do stuff if we receive an statusCode of 200 in the http protocol.
+		// console.log(' - HEADERS: ' + JSON.stringify(response.headers)); // printing http header from server's response.
 
 		var json = ''; // variable that will hold the json received from dadosabertos server.
-
-		/*	registering function that will be called if there is an error on response. When response triggers 
-			the 'data' event. I don't know which types of error there could be. */
-		response.on('error', function(err) {
-			if (lastStatus !== 'response error') { // guarding log messages so they don't spam consecutive equals.
-				logger.warn("We've had this error on dadosabertos RESPONSE: " + err);
-				lastStatus = 'response error'; // if it stops here, we are in the generic response error case.
-			}
-		});
 
 		/*	in here we need to check if the response we are getting is compressed with gzip. if it is, we have to
 			instantiate a gzip decompresser and tell node to pass all the data from response to this gzip decompresser.
@@ -94,11 +92,9 @@ var httpGETCallback = function (response) {
 			} catch (err) {
 				json = null; // if there was an error when parsing the json, it is invalid to our purpose.
 				if (err instanceof SyntaxError) {
-					if (lastStatus !== 'bad json'){ // last response wasn't case 'bad json'.
-						logger.warn("We've had a syntax error while parsing json file from dadosabertos. " +
-								"Data will be an empty object");
-						lastStatus = 'bad json'; // it means 'status.Code' is 200 but JSON could not be parsed.
-					}
+					// it means 'status.Code' is 200 but JSON could not be parsed.
+					logOnGuardsSendLastStatus('warn', "We've had a syntax error while parsing json file from dadosabertos", 
+									'only message', true);
 				} else {
 					logger.error(err.message);
 					logger.error(err.stack);		
@@ -110,22 +106,18 @@ var httpGETCallback = function (response) {
 				any data, which they should. As we are quering for everything, something must be provided. */
 			// checking if dadosabertos server gave us just a message telling us that nothing were found.
 			// "COLUMNS" attribute change to an array with size 1 and its content is'MENSAGEM'.
-			if (json['COLUMNS'][0] === "MENSAGEM") {
-				// we don't care about the message. this is the only message in the whole service.
+			if (json['COLUMNS'][0] === "MENSAGEM") { // we don't care about the messages.
 				json = null; // it means this json is invalid to our purpose.
-				if (lastStatus !== 'only message'){ // last response wasn't case 'only message'.
-					logger.warn("Dadosabertos said: " + json['DATA'][0][0]) // message comes inside 'DATA', nested 2 times.
-					lastStatus = 'only message';
-					// it means 'status.Code' is 200, JSON was parsed, but there's only a message in the JSON.
-				}
+				// it means 'status.Code' is 200, JSON was parsed, but there's only a message in the JSON.
+				logOnGuardsSendLastStatus('info', "Dadosabertos said: " + json['DATA'][0][0], 'only message', true);
+				// message comes inside 'DATA', nested 2 times.
 			}
 
 			if (json !== null) { // if json is a valid object, keep going.
-				if (lastStatus !== 'success') { // last response wasn't case 'success'.
-					// logging notice that we are back on trail.
-					logger.info("Dadosabertos is fine. We have just got some data, code: " + response.statusCode);
-					lastStatus = 'success'; // this case means everything went well.
-				}
+
+				// logging notice that we are back on trail. this case means everything went well.
+				logOnGuardsSendLastStatus('info', "Dadosabertos is fine. We have just got some data, code: " 
+						+ response.statusCode, 'success', false);
 
 				/*	object 'data' is here to represent a simple data structure. this object will hold all the busses
 					in each bus line. All bus lines in this object will be sent to the server.js thread everytime this
@@ -173,14 +165,14 @@ var httpGETCallback = function (response) {
 				for (var i = json.DATA.length - 1; i >= 0; i--) {
 					var bus = json.DATA[i];
 					var key = "" + bus[2]; // string that will be the key for the hashmap structure. 
-					// "" + NUMBER, parses the NUMBER to a string. javascript's fastest way to parse number to string.
+					// "" + NUMBER, parses the NUMBER to a string. javascript's easiest way to parse number to string.
 					if (data[key]){ // if key already exists in data structure.
 						data[key].push(bus); // add this bus to this key (add bus to its respective line).
 					} else { // if key doesn't exist.
 						data[key] = [bus]; // instantiate an array in the key with this bus inside it.
 					}
 
-					orders[bus[1]] = [bus];
+					orders[bus[1]] = [bus]; // key is bus order value. value is the whole bus information.
 					/*	array inside array, because on retrieval it will come nested, just like when we retrive a bus line.
 						when we retrieve a bus line (data[<bus line>]), we also get an array of arrays. */
 				}
@@ -222,22 +214,19 @@ var httpGETCallback = function (response) {
 	} else { // if response's statusCode wasn't 200, than it's bad new.
 		/*	writing an specific log message for each status code returned by dadosabertos but only if it's not
 			the same as the one we got in the previous response. I don't want to log the same thing over and over. */
-		if (response.statusCode == 'ECONNRESET') {
-			if (lastStatus !== 'ECONNRESET') // last response wasn't case string 'ECONNRESET'.
-				logger.warn("Dadosabertos server closed the connection, code: " + response.statusCode);
-		} else if (response.statusCode == 503) {
-			if (lastStatus !== 503) // last response wasn't case number 503.
-				logger.warn("Dadosabertos server was unavailable, code: " + response.statusCode);
+		if (response.statusCode == 503) {
+			logOnGuardsSendLastStatus('warn',"Dadosabertos server was unavailable, code: " + response.statusCode, 
+											response.statusCode, true);
 		} else if (response.statusCode == 404) { // 404 not found.
-			if (lastStatus !== 404) // last response wasn't case number 404.
-				logger.warn("Dadosabertos server could not find anything matching the url, code: " + response.statusCode);
+			logOnGuardsSendLastStatus('warn', "Dadosabertos server could not find anything matching the url, code: " 
+					+ response.statusCode, response.statusCode, true);
 		} else if (response.statusCode == 302) {
-			if (lastStatus !== 302) // last response wasn't case number 302.
-				logger.warn("Dadosabertos wants us to redirect our request to a new url, code: " + response.statusCode);
+			logOnGuardsSendLastStatus('warn', "Dadosabertos wants us to redirect our request to a new url, code: " 
+					+ response.statusCode, response.statusCode, true);
 		} else {
-			logger.warn("Dadosabertos responded with statuscode: " + response.statusCode);
+			logOnGuardsSendLastStatus('warn', "Dadosabertos responded with statuscode: " + response.statusCode, 
+											response.statusCode, true);
 		}
-		lastStatus = response.statusCode; // setting an identification of what we got in the last response.
 	}
 }
 
@@ -275,19 +264,26 @@ function sendRequestAndGrabData() {
 	/*	setting a callback function that runs when our request's times out. when the request times out, the connection 
 		is still up. It's nothing more than a simple javsascript 'setTimeout()' scheduler underneath this call. */
 	requestGet.setTimeout(config.timeout, function () {
-		if (lastStatus !== 'timeout') { // checking if we had a timeout in our last request.
-			logger.warn('Our REQUEST has timed out.'); // log message if we had.
-			lastStatus = 'timeout'; // setting an identification of what we got in the last response.
-		}
+		logOnGuardsSendLastStatus('warn', 'Our REQUEST has timed out.', 'timeout', true);
 		requestGet.abort(); // this makes the request emit an 'error' event. because it force closes the current connection.
 	})
 
 	// registering function that will be called if our request triggers an 'error' event.
 	requestGet.on('error', function (e) {
-		// checking if we had an error or timeout in our last request.
-		if (lastStatus !== 'request error' && lastStatus !== 'timeout') {
-			logger.warn('Our REQUEST has had this error: ' + e.message); // logging error message.
-			lastStatus = 'request error'; // setting an identification of what we got in the last response.
+		if (lastStatus.label !== 'timeout') { // checking if our last request has timed out.
+			// setting a different log for each known error code.
+			if (e.code === 'ENOTFOUND') {
+				logOnGuardsSendLastStatus('warn', "We couldn't find dadosabertos address, code: " + e.code, 
+												e.code, true);
+			} else if (e.code === 'ECONNRESET') {
+				logOnGuardsSendLastStatus('warn', "Dadosabertos server closed the connection on us, code: " + e.code, 
+												e.code, true);
+			} else if (e.code === 'ECONNREFUSED') {
+				logOnGuardsSendLastStatus('warn', "Dadosabertos server is off, code: " + e.code, e.code, true);
+			} else { // case where error code is new to me.
+				logOnGuardsSendLastStatus('warn', 'Our REQUEST has had this error: ' + e.message + " - " + e.code,
+												e.code, true);
+			}
 		}
 		httpGetIntervalCode = setTimeout(sendRequestAndGrabData, intervalTime); // on errors, resend request after interval.
 		// calling 'clearInterval(httpGetIntervalCode)' stops the scheduled function corresponding to 'httpGetIntervalCode'.
@@ -296,3 +292,15 @@ function sendRequestAndGrabData() {
 }
 
 sendRequestAndGrabData(); // calling the code that sends the request.
+
+/*	function that loggs 'logMessage' under 'logLevel' if 'lastStatus.lable' isn't the same as current status. Current 
+	status is the 'label' provided. It also counts how many times a 'label' is seen. In the end, it may pass 'lastStatus'
+	to parent thread according to 'sendLastStatus' boolean value. */
+function logOnGuardsSendLastStatus(logLevel, logMessage, label, sendLastStatus) {
+	if (lastStatus.label !== label) { // last response we weren't in the 'label' case.
+		logger.log(logLevel, logMessage); // so we will log the current case with 'logMessage', using 'logLevel'.
+		lastStatus.label = label; // setting the label of the current situation. so it will be used in the next request.
+		lastStatus.counter = 1; // it's the first time this label is set. because of the IF() expression.
+	} else lastStatus.counter++; // if the 'lastStatus' is the same as the 'label', we are on the same case again.
+	if (sendLastStatus) process.send({lastStatus: lastStatus}); // if we need to pass just the 'lastStatus', pass it.
+}
