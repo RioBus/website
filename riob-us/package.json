@@ -9,7 +9,9 @@
   "dependencies": {
     "express": "~4.10.x",
     "ga": ">=0.0.2",
-    "compression": ">=1.2.0"
+    "compression": ">=1.2.0",
+    "winston": ">=0.8.3",
+    "slice-file": ">=0.2.1"
   },
   "engines": {
     "node": "0.10.x"

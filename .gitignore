@@ -3,3 +3,4 @@ dataGrabbed.json
 node_modules
 reports
 dataReporter.js
+*.log
