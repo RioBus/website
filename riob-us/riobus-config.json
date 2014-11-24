@@ -7,7 +7,7 @@
 	},
 	"server": {
 		"port": 81,
-		"maxBusLines": 10,
+		"maxSearchedItems": 10,
 		"numberOfLastLogLines": 40
 	},
 	"dataReporter": {
