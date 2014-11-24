@@ -119,46 +119,34 @@ var httpGETCallback = function (response) {
 				logOnGuardsSendLastStatus('info', "Dadosabertos is fine. We have just got some data, code: " 
 						+ response.statusCode, 'success', false);
 
-				/*	object 'data' is here to represent a simple data structure. this object will hold all the busses
-					in each bus line. All bus lines in this object will be sent to the server.js thread everytime this
-					code runs. */
+				/*	object 'data' is here to represent a data structure. that will hold all the busses 2 times. 
+					We will add busses grouped by bus lines and individually. this object will be sent to the server.js 
+					thread everytime we can successfully retrieve dadosabertos JSON and parse it. */
 				var data = {};
 
 				/*
-					'data' will be a hashtable/hashmap, where the key will be the bus line and the value
-					will be all the busses on this line that came in the JSON response, like this:
+					'data' will be a hashtable/hashmap, where the keys will be the bus line, in which the value
+					will be all the busses on this line that came in the JSON response, and the bus orders, in 
+					which the value will be its respective bus, like this:
 
 					key 			: 	value
 					"<bus line>"	: 	[<bus info>, <bus info>, ...],
 					"<bus line>"	: 	[<bus info>, <bus info>, ...],
-					"<bus line>"	: 	[<bus info>, <bus info>, ...]
+					"<bus line>"	: 	[<bus info>, <bus info>, ...],
+					"<bus order>"	: 	<bus info>,
+					"<bus order>"	: 	<bus info>,
+					"<bus order>"	: 	<bus info>
 
 					where :
 					<bus info> = ["DATAHORA","ORDEM","LINHA","LATITUDE","LONGITUDE","VELOCIDADE","DIRECAO"]
 					<bus line> = "LINHA"
+					<bus order> = "ORDEM"
 
 					I have decided to build the structure in this way because I believe this is the way we should build
 					our future database. This structre makes the search for all the busses in a bus line, retrieve a
 					single value from one key. This is the main operation done in the project: a search for all the busses
-					from one bus line.
-				*/
-
-				var orders = {};
-				/* orders is also a hashtable/hashmap, where the key will be the bus order and the value
-					will be its respective bus, like this:
-
-					key 			: 	value
-					"<bus order>"	: 	<bus info>,
-					"<bus order>"	: 	<bus info>,
-					"<bus order>"	: 	<bus info>
-					
-					where :
-					<bus info> = ["DATAHORA","ORDEM","LINHA","LATITUDE","LONGITUDE","VELOCIDADE","DIRECAO"]
-					<bus order> = "ORDEM"
-
-					I have decided to build the structure in this way because I believe this is the best way to retrieve
-					a bus when we receive a query for a bus order. And also beceause the whole 'data' isn't big. 
-					Memory ins't an issue by now.
+					from one bus line. And also, this is the best way to retrieve a bus when we receive a query for a bus
+					order. And also beceause the whole 'data' isn't big. Memory ins't an issue by now.
 				*/
 
 				// loop running backwards, according to google's recommendation for v8 engine. **forwards is just as good**.
@@ -172,7 +160,7 @@ var httpGETCallback = function (response) {
 						data[key] = [bus]; // instantiate an array in the key with this bus inside it.
 					}
 
-					orders[bus[1]] = [bus]; // key is bus order value. value is the whole bus information.
+					data[bus[1]] = [bus]; // key is bus order value. value is the whole bus information.
 					/*	array inside array, because on retrieval it will come nested, just like when we retrive a bus line.
 						when we retrieve a bus line (data[<bus line>]), we also get an array of arrays. */
 				}
@@ -186,7 +174,7 @@ var httpGETCallback = function (response) {
 				// }
 
 				// sending 'data', 'json', 'orders' and lastUpdate to parent thread.
-				process.send({data: data, json: json, orders: orders, lastUpdate: timeStamp(), lastStatus: lastStatus});
+				process.send({data: data, json: json, lastUpdate: timeStamp(), lastStatus: lastStatus});
 				/*	lastUpdate informs when we received the last successful response. transforming date to a 
 					readable UTC time string. it looks like this: "Sun Nov 02 2014 16:26:12 GMT-0200 (BRST)"*/
 
