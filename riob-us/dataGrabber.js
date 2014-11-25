@@ -106,12 +106,25 @@ var httpGETCallback = function (response) {
 				any data, which they should. As we are quering for everything, something must be provided. */
 			// checking if dadosabertos server gave us just a message telling us that nothing were found.
 			// "COLUMNS" attribute change to an array with size 1 and its content is'MENSAGEM'.
-			if (json['COLUMNS'][0] === "MENSAGEM") { // we don't care about the messages.
-				json = null; // it means this json is invalid to our purpose.
-				// it means 'status.Code' is 200, JSON was parsed, but there's only a message in the JSON.
-				logOnGuardsSendLastStatus('info', "Dadosabertos said: " + json['DATA'][0][0], 'only message', true);
-				// message comes inside 'DATA', nested 2 times.
+			try {
+				if (json['COLUMNS'][0] === "MENSAGEM") { // we don't care about the messages.
+					json = null; // it means this json is invalid to our purpose.
+					// it means 'status.Code' is 200, JSON was parsed, but there's only a message in the JSON.
+					logOnGuardsSendLastStatus('info', "Dadosabertos said: " + json['DATA'][0][0], 'only message', true);
+					// message comes inside 'DATA', nested 2 times.
+				}
+			} catch (err) {
+				json = null; // if there was an error when parsing the json, it is invalid to our purpose.
+				if (err instanceof SyntaxError) {
+					// it means 'status.Code' is 200 but JSON could not be parsed.
+					logOnGuardsSendLastStatus('warn', "We've had a syntax error while parsing json file from dadosabertos, COLUMNS doesn't exist", 
+									'only message', true);
+				} else {
+					logger.error(err.message);
+					logger.error(err.stack);		
+				}
 			}
+
 
 			if (json !== null) { // if json is a valid object, keep going.
 
