@@ -152,6 +152,14 @@ var httpGETCallback = function (response) {
 				for (var i = json.DATA.length - 1; i >= 0; i--) {
 					var bus = json.DATA[i];
 					var key = "" + bus[2]; // string that will be the key for the hashmap structure. 
+					
+					// hotfix for wrong daylight saving time and transforming DATAHORA to standard format
+					var time = new Date(bus[0]);
+					if (bus[1].substr(0,1) != "C") { // Bus order starting with "C" is already in BRST
+						time.setHours(time.getHours()+1);						
+					}
+					bus[0] = time.toLocaleString();
+					
 					// "" + NUMBER, parses the NUMBER to a string. javascript's easiest way to parse number to string.
 					if (data[key]){ // if key already exists in data structure.
 						data[key].push(bus); // add this bus to this key (add bus to its respective line).

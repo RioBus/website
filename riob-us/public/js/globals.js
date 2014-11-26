@@ -13,8 +13,7 @@ var arrayCores = ["#FF0000","#0000FF","#00FF00","#FF0000","#00FF00","#0000FF","#
 
 function addMarker(location, data) {
     markersPositions.push(location);
-    var dataBR = data[0].substring(3,6) + data[0].substring(0,2) + data[0].substring(5);
-    var gpsTime = new Date(Date.parse(dataBR));
+    var gpsTime = new Date(data[0]);
 
     var iconUrl;
     if ((new Date() - gpsTime)/1000/60 > 10) {
@@ -113,7 +112,7 @@ function findBus(clicked){
     var line = currentLine + "_" + loadTimeout;
     $.getJSON("http://riob.us:81/?callback=?",{
             s: "1",
-            linha: currentLine,
+            busca: currentLine,
             rand: Math.round(Math.random()*999999)
         },
         function(data, status){
