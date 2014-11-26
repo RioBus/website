@@ -211,8 +211,12 @@ function LogHolder() { // creating a writeable stream class
 	this.writableStrem = new stream.Writable(); // instantiating a new writable object.
 	this.writableStrem.logs = [] // adding an attribute that will hold log messages.
 	this.writableStrem._write = function (chunk, encoding, done) { // defining stream's write function.
-		var log = JSON.parse(chunk.toString()) // parse one line as a javascript object.
-		this.logs.push(" - " + log.timestamp + "\t" + log.level + "\t" + log.message + "\n"); // making it a string.
+		try { // checking if log line is parsable.
+			var log = JSON.parse(chunk.toString()) // parse one line as a javascript object.
+			this.logs.push("- " + log.timestamp + "\t" + log.level + "\t" + log.message + "\n"); // making it a string.
+		} catch (err) { // if not, save the error.
+			this.logs.push("- bad log line: " + err.messages)
+		}
 		if (this.logs.length > amountOfLines) // if array has more than maximum of elements.
 			this.logs.shift() // drop first element.
 		done();
@@ -230,7 +234,7 @@ sf('./serverLog.log', opts={}).follow(-amountOfLines).pipe(serverLogHolder); // 
 
 // concatenates each log line from specified 'logHolder' and send it on response.
 function getLasLogLines(logHolder, response) {
-	var returnText = " - timestamp\t\t\t\t\tlevel\tmessage\n"; // header text for the browser.
+	var returnText = "- timestamp\t\t\t\t\tlevel\tmessage\n"; // header text for the browser.
 	for (var i = logHolder.logs.length - 1; i >= 0; i--) {
 		returnText += logHolder.logs[i]
 	};
