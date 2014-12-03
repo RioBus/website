@@ -6,7 +6,8 @@
 		"timeout": 20000
 	},
 	"server": {
-		"port": 81,
+		"address": "66.228.60.200",
+		"port": 80,
 		"maxSearchedItems": 10,
 		"numberOfLastLogLines": 40
 	},
