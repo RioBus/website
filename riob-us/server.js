@@ -152,7 +152,7 @@ app.get('/log', function (req, res, next) {
 var configServer = JSON.parse(fs.readFileSync(__dirname + "/riobus-config.json")).server;
 
 // starting our server, using our express instance, on port specified by our JSON configuration file.
-var server = app.listen(configServer.port, function () {
+var server = app.listen(configServer.port, configServer.address, function () {
 
 	var host = server.address().address;
 	var port = server.address().port;
