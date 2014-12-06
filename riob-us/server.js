@@ -8,6 +8,19 @@
 
 var winston = require('winston'); // importing library that will help us write better logs.
 
+/*code sample of google analytics usage with nodealytics library*/
+var ua = "UA-49628280-3";
+var hostAnalytics = "riob.us";
+var NA = require("nodealytics");
+NA.initialize(ua, hostAnalytics, function () {
+  //MORE GOOGLE ANALYTICS CODE HERE
+});
+NA.trackPage('REST', '/en/serverside/test', function (err, resp) {
+  if (!err && resp.statusCode === 200) {
+   // console.log('Page has been tracked with Google Analytics');
+  }
+});
+
 // function that returns our standart time stamp format. I'm using it for the loggers and for the json's 'lastUpdate'.
 function timeStamp () {return (new Date()).toLocaleString()} 
 
@@ -81,17 +94,6 @@ app.get('/', function (req, res, next) {
 			//send json with all busses belonging to these bus lines and all bus orders.
 			sendQueriedItemAsJson(res, searchString); // function defined because it is  being reused by the rest api.
 
-			/*code sample of google analytics usage with ga library*/
-			// var ua = "UA-49628280-3";
-			// var host = "riob.us";
-			// var ga = new GoogleAnalytics(ua, host);
-			// ga.trackPage('/en/serverside/test');
-			// ga.trackEvent({
-			//     category: 'REST Hit',
-			//     action: 'REST',
-			//     label: 'Site',
-			//     value: 1
-			// });
 			if (platformType) { // checking if plataform type exists.
 				if (platformType == 1) { // dektop browsers.
 
@@ -102,6 +104,20 @@ app.get('/', function (req, res, next) {
 				} else {
 
 				}
+				
+				// tracking source
+				NA.trackEvent('REST+Hit', 'REST', label, platformType, function (err, resp) {
+				  if (!err && resp.statusCode === 200) {
+					//console.log('Event has been tracked with Google Analytics');
+				  }
+				});
+				
+				// tracking search string
+				NA.trackEvent('REST+Hit', 'Linha', searchString, searchString, function (err, resp) {
+				  if (!err && resp.statusCode === 200) {
+					//console.log('Event has been tracked with Google Analytics');
+				  }
+				});
 			}	
 		} else {
 			//busLine and busOrder were not defined. we could send a 404 bad request.
