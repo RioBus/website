@@ -90,38 +90,46 @@ app.get('/', function (req, res, next) {
 		// getting the number sent by the platform that should identify it (android, iOS...).
 		var platformType = req.query.s;
 
+		var searched = "";
 		if (searchString) { // checking if searchString parameters exists.
 			//send json with all busses belonging to these bus lines and all bus orders.
 			sendQueriedItemAsJson(res, searchString); // function defined because it is  being reused by the rest api.
-
+			
+			searched = searchString;
+			
+			var label = "";
 			if (platformType) { // checking if plataform type exists.
 				if (platformType == 1) { // dektop browsers.
-
-				} else if (platformType == 2) { // mobile. i don't which mobile it is.
-
-				} else if (platformType == 3) { // legado. i don't know what legado we have.
-
+					label = "Site";
+				} else if (platformType == 2) { 
+					label = "Mobile";
+				} else if (platformType == 3) { 
+					label = "Legado";
 				} else {
-
-				}
-				
-				// tracking source
-				NA.trackEvent('REST+Hit', 'REST', label, platformType, function (err, resp) {
-				  if (!err && resp.statusCode === 200) {
-					//console.log('Event has been tracked with Google Analytics');
-				  }
-				});
-				
-				// tracking search string
-				NA.trackEvent('REST+Hit', 'Linha', searchString, searchString, function (err, resp) {
-				  if (!err && resp.statusCode === 200) {
-					//console.log('Event has been tracked with Google Analytics');
-				  }
-				});
-			}	
+				}				
+			
+			} else {
+				label = "Origem não informada";
+			}
+			
 		} else {
 			//busLine and busOrder were not defined. we could send a 404 bad request.
+			searched = "Nada buscado";
 		}
+		
+		// tracking source
+		NA.trackEvent('REST+Hit', 'REST', label, function (err, resp) {
+		  if (!err && resp.statusCode === 200) {
+			//console.log('Event has been tracked with Google Analytics');
+		  }
+		});
+		
+		// tracking search string
+		NA.trackEvent('REST+Hit', 'Linha', searched, function (err, resp) {
+		  if (!err && resp.statusCode === 200) {
+			//console.log('Event has been tracked with Google Analytics');
+		  }
+		});
 	} else { // request has no parameters. we have to send the index.html file.
 		next() // in this case, move to next matching route.
 	}
