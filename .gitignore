@@ -4,3 +4,4 @@ node_modules
 reports
 dataReporter.js
 *.log
+.idea
