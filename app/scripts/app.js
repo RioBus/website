@@ -34,6 +34,12 @@ angular
   })
   .run(function($rootScope){
 
+    $rootScope.dataServer = {
+      platformId: 3,
+      ip: '127.0.0.1',
+      port: 8081
+    };
+
     google.maps.event.addDomListener(window, 'load', function(){
       var mapDiv = document.getElementById('map-canvas');
       var location = new google.maps.LatLng(-22.9083, -43.1964);
