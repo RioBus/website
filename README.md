@@ -1,33 +1,12 @@
-riobus-web data grabber
-==========
+# riobus
 
-Rio de Janeiro bus geolocalization web app
+This project is generated with [yo angular generator](https://github.com/yeoman/generator-angular)
+version 0.11.1.
 
+## Build & development
 
-http://riob.us
+Run `grunt` for building and `grunt serve` for preview.
 
-Os dados são oferecidos publicamente pela prefeitura do Rio de Janeiro, em parceria com a FETRANSPOR e Iplanrio. As posições dos ônibus são recuperadas pelo GPS embarcado neles, enviados para a FETRANSPOR e, por fim, a Iplanrio as disponibiliza no Data.Rio, o projeto de dados abertos do município.
+## Testing
 
-Para rodá-lo, 
-<ol>
-
-	<li>instale node.js</li>
-
-	<li>clone o projeto ou baixe o zip dele.
-		<ol>
-			<li>se baixou em zip, descopacte-o.</li>
-			<li>se preferir clonar: <br>
-			<code>git clone https://github.com/marco-jardim/riobus-web</code></li>
-		</ol>
-	</li>
-
-	<li>abra o terminal e entre no diretório 'riob-us'.<br>
-	<code>cd riobus-web/riob-us</code> </li>
-		
-	<li>installe as dependencias usando o npm. <br>
-	<code>npm install</code></li>
-
-	<li>chame o node passando o 'server.js' como argumento. <br>
-	<code>node server.js</code></li>
-		
-</ol>
+Running `grunt test` will run the unit tests with karma.

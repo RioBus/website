@@ -1,7 +1,7 @@
-.DS_Store
-dataGrabbed.json
 node_modules
-reports
-dataReporter.js
-*.log
+dist
+.tmp
+.sass-cache
+bower_components
+legacy
 .idea
