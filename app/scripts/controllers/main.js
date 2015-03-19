@@ -8,26 +8,29 @@
  * Controller of the riobus
  */
 angular.module('riobus')
-  .controller('MainCtrl', function ($scope, $rootScope, $http, $interval, MapMarker) {
+  .controller('MainCtrl', function ($scope, $rootScope, $http, $interval, MapMarker, $routeParams) {
+
+    $('.modal-trigger').leanModal();
 
     var self = this;
 
     var toastTime = 3000;
 
-    var searchLoop = null;
+    $rootScope.searchLoop = null;
 
     $scope.search = function() {
-      if (!this.busLines) return;
-      var lines = this.busLines.replace(/\s/g, "");
+      var lines = this.busLines || $routeParams.line;
+      if (!lines) return;
+      lines = lines.replace(/\s/g, "");
 
-      if (searchLoop) {
-        $interval.cancel(searchLoop);
-        searchLoop = undefined;
+      if ($rootScope.searchLoop) {
+        $interval.cancel($rootScope.searchLoop);
+        $rootScope.searchLoop = undefined;
         MapMarker.clear();
       }
 
       self.doSearch(lines);
-      searchLoop = $interval(function(){
+      $rootScope.searchLoop = $interval(function(){
         self.doSearch(lines);
       }, $rootScope.updateInterval);
 
@@ -41,10 +44,10 @@ angular.module('riobus')
           if(records>0)
             self.setMarkers(data);
           else
-            toast("Essa linha não existe ou ainda não é monitorada.", toastTime);
+            toast('Essa linha não existe ou ainda não é monitorada.', toastTime);
         })
         .error(function (data, status) {
-          self.showErrorMessage(data, status);
+          toast('Ocorreu um erro interno. Tente novamente.', toastTime);
         });
     };
 
@@ -52,13 +55,12 @@ angular.module('riobus')
     self.setMarkers = function(data){
       var map = $rootScope.map;
       for(var i=0; i<data.length; i++){
-        //console.log(data[i].latitude);
         MapMarker.addMarker(map, data[i]);
         MapMarker.fitBounds(map);
       }
     };
 
-    self.showErrorMessage = function(data, status){
-      toast("("+status+") Não teve retorno", toastTime);
-    };
+    if($routeParams.line){
+      $scope.search();
+    }
   });

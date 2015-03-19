@@ -16,9 +16,14 @@ form.search-box{
 }
 
 form.search-box div.row{
-  margin: 0 10px;
+  margin: 0 40px 0 10px;
 }
 
 div.container{
   position: absolute;
+}
+
+#info-icon{
+  margin-left: 40px;
+  color: #CCCCCC;
 }
