@@ -21,9 +21,16 @@ angular.module('riobus')
     var bounds = new google.maps.LatLngBounds();
 
     function formatInfowindowContent(data){
+      var datetime = data.timeStamp.split(' ');
+      var date = datetime[0].split('-');
+      var tmp = date[0];
+      date[0] = date[1];
+      date[1] = tmp;
+      date = date.join('/');
+      var time = datetime[1];
       return '<div style="line-height:1.35;overflow:hidden;white-space:nowrap;">' +
                 "<h6>"+data.order+" ("+data.line+")</h6>" +
-                "Hora: " + (new Date(data.timeStamp)).toLocaleString('pt-BR') + "</br>" +
+                "Atualizado em: " + date + ' ' + time +"</br>" +
                 "Velocidade: " + data.speed + " Km/h</br>" +
               "</div>";
     }
