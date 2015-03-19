@@ -27,3 +27,8 @@ div.container{
   margin-left: 40px;
   color: #CCCCCC;
 }
+
+img.icon-special-links{
+  max-height: 72px;
+  margin: 10px;
+}
