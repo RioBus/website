@@ -24,13 +24,7 @@ angular
         templateUrl: 'views/main.html',
         controller: 'MainCtrl'
       })
-      .when('/about', {
-        templateUrl: 'views/about.html',
-        controller: 'AboutCtrl'
-      })
-      .otherwise({
-        redirectTo: '/'
-      });
+      .otherwise({ redirectTo: '/' });
   })
   .run(function($rootScope){
 
@@ -39,6 +33,8 @@ angular
       ip: '127.0.0.1',
       port: 8081
     };
+
+    $rootScope.updateInterval = 15000;
 
     google.maps.event.addDomListener(window, 'load', function(){
       var mapDiv = document.getElementById('map-canvas');

@@ -8,25 +8,46 @@
  * Controller of the riobus
  */
 angular.module('riobus')
-  .controller('MainCtrl', function ($scope, $rootScope, $http, MapMarker) {
+  .controller('MainCtrl', function ($scope, $rootScope, $http, $interval, MapMarker) {
 
     var self = this;
 
     var toastTime = 3000;
 
-    $scope.search = function(){
-      if(!this.busLines) return;
+    var searchLoop = null;
+
+    $scope.search = function() {
+      if (!this.busLines) return;
       var lines = this.busLines.replace(/\s/g, "");
 
-      $http.get('http://'+$rootScope.dataServer.ip+':'+$rootScope.dataServer.port+'/search/'+$rootScope.dataServer.platformId+'/'+lines)
-        .success(function(data, status) {
-          console.log("Got "+data.length+' records.');
-          self.setMarkers(data);
-        })
-        .error(function(data, status) {
-          self.showErrorMessage(data, status);
-        })
+      if (searchLoop) {
+        $interval.cancel(searchLoop);
+        searchLoop = undefined;
+        MapMarker.clear();
+      }
+
+      self.doSearch(lines);
+      searchLoop = $interval(function(){
+        self.doSearch(lines);
+      }, $rootScope.updateInterval);
+
     };
+
+    self.doSearch = function(lines){
+      $http.get('http://' + $rootScope.dataServer.ip + ':' + $rootScope.dataServer.port + '/search/' + $rootScope.dataServer.platformId + '/' + lines)
+        .success(function (data, status) {
+          var records = data.length;
+          console.log("Got " + records + ' records.');
+          if(records>0)
+            self.setMarkers(data);
+          else
+            toast("Essa linha não existe ou ainda não é monitorada.", toastTime);
+        })
+        .error(function (data, status) {
+          self.showErrorMessage(data, status);
+        });
+    };
+
 
     self.setMarkers = function(data){
       var map = $rootScope.map;

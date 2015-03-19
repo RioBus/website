@@ -10,11 +10,13 @@
 angular.module('riobus')
   .factory('MapMarker', function () {
 
-    var markers = {
+    var markerIcons = {
       good: 'images/bus_green.png',
       average: 'images/bus_yellow.png',
       bad: 'images/bus_red.png'
     };
+
+    var markers = [];
 
     var bounds = new google.maps.LatLngBounds();
 
@@ -27,19 +29,19 @@ angular.module('riobus')
     }
 
     function getIconPath(time){
-      if(time>10) return markers.bad;
-      else if(time>=5 && time<10) return markers.average;
-      else return markers.good;
+      if(time>10) return markerIcons.bad;
+      else if(time>=5 && time<10) return markerIcons.average;
+      else return markerIcons.good;
     }
 
     google.maps.Map.prototype.clearMarkers = function() {
-      for(var i=0; i < this.markers.length; i++)
-        this.markers[i].setMap(null);
-      this.markers = new Array();
+      for(var i=0; i < markers.length; i++)
+        markers[i].setMap(null);
+      markers = [];
     };
 
     function clearMarkers(){
-      google.maps.Map.clearMarkers();
+      google.maps.Map.prototype.clearMarkers();
       bounds = new google.maps.LatLngBounds();
     }
 
@@ -64,6 +66,8 @@ angular.module('riobus')
         marker.info.open(map, marker);
       });
       bounds.extend(position);
+
+      markers.push(marker);
     }
 
     // Public API here
