@@ -8,24 +8,24 @@
  * Controller of the riobus
  */
 angular.module('riobus')
-  .controller('MainCtrl', function ($scope, $rootScope, $http, $interval, MapMarker, $routeParams) {
-
-    $('.modal-trigger').leanModal();
+  .controller('MainCtrl', function ($scope, $rootScope, $http, $interval, MapMarker, $location) {
 
     var self = this;
+
+    var urlLines;
 
     var toastTime = 3000;
 
     $rootScope.searchLoop = null;
 
     $scope.search = function() {
-      var lines = this.busLines || $routeParams.line;
+      var lines = this.busLines || urlLines;
       if (!lines) return;
       lines = lines.replace(/\s/g, "");
+      console.log(lines);
 
       if ($rootScope.searchLoop) {
-        $interval.cancel($rootScope.searchLoop);
-        $rootScope.searchLoop = undefined;
+        self.cancelLoop();
         MapMarker.clear();
       }
 
@@ -47,10 +47,15 @@ angular.module('riobus')
             toast('Essa linha não existe ou ainda não é monitorada.', toastTime);
         })
         .error(function (data, status) {
+          self.cancelLoop();
           toast('Ocorreu um erro interno. Tente novamente.', toastTime);
         });
     };
 
+    self.cancelLoop = function(){
+      $interval.cancel($rootScope.searchLoop);
+      $rootScope.searchLoop = undefined;
+    };
 
     self.setMarkers = function(data){
       var map = $rootScope.map;
@@ -60,7 +65,9 @@ angular.module('riobus')
       }
     };
 
-    if($routeParams.line){
+    var urlData = $location.absUrl().split('?')[1];
+    if(urlData){
+      urlLines = urlData;
       $scope.search();
     }
   });

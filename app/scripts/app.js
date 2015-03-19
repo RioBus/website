@@ -14,23 +14,12 @@ angular
     'ngAria',
     'ngCookies',
     'ngResource',
-    'ngRoute',
     'ngSanitize',
     'ngTouch'
   ])
-  .config(function ($routeProvider, $locationProvider) {
-    $routeProvider
-      .when('/', {
-        templateUrl: 'views/main.html',
-        controller: 'MainCtrl'
-      })
-      .when('/:line', {
-        templateUrl: 'views/main.html',
-        controller: 'MainCtrl'
-      })
-      .otherwise({ redirectTo: '/' });
-  })
   .run(function($rootScope){
+
+    $('.modal-trigger').leanModal();
 
     $rootScope.dataServer = {
       platformId: 3,
