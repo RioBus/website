@@ -32,3 +32,19 @@ img.icon-special-links{
   max-height: 72px;
   margin: 10px;
 }
+
+#btn-googleplay{
+  position: absolute;
+  right: 10px;
+  bottom: 60px;
+}
+
+#btn-appstore{
+  position: absolute;
+  right: 10px;
+  bottom: 20px;
+}
+
+a.app-btn img{
+  width: 120px;
+}
