@@ -41,8 +41,12 @@ angular.module('riobus')
         .success(function (data, status) {
           var records = data.length;
           console.log("Got " + records + ' records.');
-          if(records>0)
+          if(records>0){
             self.setMarkers(data);
+            if(lines.split(',').length===1) {
+              self.getItinerary(lines);
+            }
+          }
           else
             toast('Essa linha não existe ou ainda não é monitorada.', toastTime);
         })
@@ -63,6 +67,26 @@ angular.module('riobus')
         MapMarker.addMarker(map, data[i]);
         MapMarker.fitBounds(map);
       }
+    };
+
+    self.getItinerary = function(line){
+      console.log("Buscando itinerário...");
+
+      $http.get('http://' + $rootScope.dataServer.ip + ':' + $rootScope.dataServer.port + '/itinerary/' + line)
+        .success(function(data){
+          console.log("Pontos: "+data.length);
+          var itinerary = MapMarker.prepareItinerary(data);
+          var path = new google.maps.Polyline({
+            path: itinerary.spotList,
+            geodesic: true,
+            strokeColor: itinerary.color,
+            strokeOpacity: 0.7,
+            strokeWeight: 5
+          });
+          path.setMap($rootScope.map);
+          MapMarker.setItineraryData(path);
+        });
+
     };
 
     var urlData = $location.absUrl().split('?')[1];

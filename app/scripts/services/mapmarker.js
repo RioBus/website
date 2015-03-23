@@ -8,7 +8,7 @@
  * Factory in the riobus.
  */
 angular.module('riobus')
-  .factory('MapMarker', function () {
+  .factory('MapMarker', function ($rootScope) {
 
     var markerIcons = {
       good: 'images/bus_green.png',
@@ -16,7 +16,13 @@ angular.module('riobus')
       bad: 'images/bus_red.png'
     };
 
+    var pathColor = '#967DE7';
+
+    $rootScope.itineraryPath = null;
+
     var markers = [];
+
+    var itineraryPath = {};
 
     var bounds = new google.maps.LatLngBounds();
 
@@ -29,26 +35,31 @@ angular.module('riobus')
       date = date.join('/');
       var time = datetime[1];
       return '<div style="line-height:1.35;overflow:hidden;white-space:nowrap;">' +
-                "<h6>"+data.order+" ("+data.line+")</h6>" +
-                "Atualizado em: " + date + ' ' + time +"</br>" +
-                "Velocidade: " + data.speed + " Km/h</br>" +
-              "</div>";
+                '<h6>'+data.order+' ('+data.line+')</h6>' +
+                'Atualizado em: ' + date + ' ' + time +'</br>' +
+                'Velocidade: ' + data.speed + ' Km/h</br>' +
+              '</div>';
     }
 
     function getIconPath(time){
-      if(time>10) return markerIcons.bad;
-      else if(time>=5 && time<10) return markerIcons.average;
-      else return markerIcons.good;
+      if(time>10){
+        return markerIcons.bad;
+      }
+      else if(time>=5 && time<10){
+        return markerIcons.average;
+      }
+      else{
+        return markerIcons.good;
+      }
     }
 
-    google.maps.Map.prototype.clearMarkers = function() {
-      for(var i=0; i < markers.length; i++)
-        markers[i].setMap(null);
-      markers = [];
-    };
-
     function clearMarkers(){
-      google.maps.Map.prototype.clearMarkers();
+      var i;
+      for(i=0; i < markers.length; i++){
+        markers[i].setMap(null);
+      }
+      markers = [];
+      itineraryPath.setMap(null);
       bounds = new google.maps.LatLngBounds();
     }
 
@@ -64,7 +75,7 @@ angular.module('riobus')
       var marker = new google.maps.Marker({
         position: position,
         map: map,
-        title: data.order + " (" + data.line + ")",
+        title: data.order + ' (' + data.line + ')',
         icon: new google.maps.MarkerImage(iconPath)
       });
 
@@ -77,10 +88,32 @@ angular.module('riobus')
       markers.push(marker);
     }
 
+    function itinerary(data){
+      var it = {};
+      it.spotList = [];
+      it.description = data[0].description;
+      it.line = data[0].line;
+      it.agency = data[0].agency;
+      it.color = pathColor;
+
+      for(var i=0; i<data.length; i++){
+        var spot = data[i];
+        var location = new google.maps.LatLng(spot.latitude, spot.longitude);
+        it.spotList.push(location);
+      }
+      return it;
+    }
+
+    function setItineraryData(data){
+      itineraryPath = data;
+    }
+
     // Public API here
     return {
       addMarker: add,
       clear: clearMarkers,
-      fitBounds: fitBounds
+      fitBounds: fitBounds,
+      prepareItinerary: itinerary,
+      setItineraryData: setItineraryData
     };
   });

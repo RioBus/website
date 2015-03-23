@@ -27,7 +27,7 @@ angular
       port: 8081
     };
 
-    $rootScope.updateInterval = 15000;
+    $rootScope.updateInterval = 20000;
 
     google.maps.event.addDomListener(window, 'load', function(){
       var mapDiv = document.getElementById('map-canvas');
