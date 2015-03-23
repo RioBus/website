@@ -18,11 +18,9 @@ angular.module('riobus')
 
     var pathColor = '#0000FF';
 
-    $rootScope.itineraryPath = null;
-
     var markers = [];
 
-    var itineraryPath = {};
+    var itineraryPath = null;
 
     var bounds = new google.maps.LatLngBounds();
 
@@ -59,7 +57,10 @@ angular.module('riobus')
         markers[i].setMap(null);
       }
       markers = [];
-      itineraryPath.setMap(null);
+      if(itineraryPath){
+        itineraryPath.setMap(null);
+        itineraryPath = null;
+      }
       bounds = new google.maps.LatLngBounds();
     }
 

@@ -22,13 +22,12 @@ angular.module('riobus')
       var lines = this.busLines || urlLines;
       if (!lines) return;
       lines = lines.replace(/\s/g, "");
-      console.log(lines);
 
       if ($rootScope.searchLoop) {
         self.cancelLoop();
-        MapMarker.clear();
       }
 
+      MapMarker.clear();
       self.doSearch(lines);
       $rootScope.searchLoop = $interval(function(){
         self.doSearch(lines);
