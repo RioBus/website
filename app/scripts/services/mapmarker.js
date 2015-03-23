@@ -16,7 +16,7 @@ angular.module('riobus')
       bad: 'images/bus_red.png'
     };
 
-    var pathColor = '#967DE7';
+    var pathColor = '#0000FF';
 
     $rootScope.itineraryPath = null;
 

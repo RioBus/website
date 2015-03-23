@@ -80,7 +80,7 @@ angular.module('riobus')
             path: itinerary.spotList,
             geodesic: true,
             strokeColor: itinerary.color,
-            strokeOpacity: 0.7,
+            strokeOpacity: 0.4,
             strokeWeight: 5
           });
           path.setMap($rootScope.map);
