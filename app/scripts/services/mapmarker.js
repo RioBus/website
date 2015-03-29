@@ -8,7 +8,7 @@
  * Factory in the riobus.
  */
 angular.module('riobus')
-  .factory('MapMarker', function ($rootScope) {
+  .factory('MapMarker', function () {
 
     var markerIcons = {
       good: 'images/bus_green.png',
@@ -34,8 +34,9 @@ angular.module('riobus')
       var time = datetime[1];
       return '<div style="line-height:1.35;overflow:hidden;white-space:nowrap;">' +
                 '<h6>'+data.order+' ('+data.line+')</h6>' +
-                'Atualizado em: ' + date + ' ' + time +'</br>' +
-                'Velocidade: ' + data.speed + ' Km/h</br>' +
+                'Atualizado em: ' + date + ' ' + time +'<br/>' +
+                'Velocidade: ' + data.speed + ' Km/h<br/>' +
+                'Sentido: ' + data.sense + '<br/>' +
               '</div>';
     }
 

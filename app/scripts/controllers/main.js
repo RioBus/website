@@ -27,7 +27,6 @@ angular.module('riobus')
         self.cancelLoop();
       }
 
-      MapMarker.clear();
       self.doSearch(lines);
       $rootScope.searchLoop = $interval(function(){
         self.doSearch(lines);
@@ -36,6 +35,7 @@ angular.module('riobus')
     };
 
     self.doSearch = function(lines){
+      MapMarker.clear();
       $http.get('http://' + $rootScope.dataServer.ip + ':' + $rootScope.dataServer.port + '/search/' + $rootScope.dataServer.platformId + '/' + lines)
         .success(function (data, status) {
           var records = data.length;

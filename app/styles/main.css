@@ -5,9 +5,19 @@ body {
   height: 100%;
 }
 
-button.prefix{
+div.input-field button.prefix{
   background: none;
   border: none;
+}
+
+div.row div.input-field *{
+  display: inline;
+  margin-left: -5px;
+}
+
+#info-icon{
+  margin-left: 40px;
+  color: #CCCCCC;
 }
 
 form.search-box{
@@ -21,11 +31,6 @@ form.search-box div.row{
 
 div.container{
   position: absolute;
-}
-
-#info-icon{
-  margin-left: 40px;
-  color: #CCCCCC;
 }
 
 img.icon-special-links{
