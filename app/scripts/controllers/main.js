@@ -46,8 +46,10 @@ angular.module('riobus')
               self.getItinerary(lines);
             }
           }
-          else
-            toast('Essa linha não existe ou ainda não é monitorada.', toastTime);
+          else{
+            toast('Nenhum ônibus encontrado para a linha pesquisada.', toastTime);
+            self.cancelLoop()
+          }
         })
         .error(function (data, status) {
           self.cancelLoop();
