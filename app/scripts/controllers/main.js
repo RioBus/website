@@ -12,16 +12,19 @@ angular.module('riobus')
 
     var self = this;
 
-    var urlLines;
-
     var toastTime = 3000;
 
     $rootScope.searchLoop = null;
 
-    $scope.search = function() {
-      var lines = this.busLines || urlLines;
-      if (!lines) return;
-      lines = lines.replace(/\s/g, "");
+    $scope.search = function(data) {
+      if(data){
+        this.busLines = data;
+      }
+      var lines = this.busLines;
+      if (!lines){
+        return;
+      }
+      lines = lines.replace(/\s/g, '');
 
       if ($rootScope.searchLoop) {
         self.cancelLoop();
@@ -39,7 +42,7 @@ angular.module('riobus')
       $http.get('http://' + $rootScope.dataServer.ip + ':' + $rootScope.dataServer.port + '/search/' + $rootScope.dataServer.platformId + '/' + lines)
         .success(function (data, status) {
           var records = data.length;
-          console.log("Got " + records + ' records.');
+          console.log('Got ' + records + ' records.');
           if(records>0){
             self.setMarkers(data);
             if(lines.split(',').length===1) {
@@ -48,7 +51,7 @@ angular.module('riobus')
           }
           else{
             toast('Nenhum ônibus encontrado para a linha pesquisada.', toastTime);
-            self.cancelLoop()
+            self.cancelLoop();
           }
         })
         .error(function (data, status) {
@@ -71,11 +74,11 @@ angular.module('riobus')
     };
 
     self.getItinerary = function(line){
-      console.log("Buscando itinerário...");
+      console.log('Buscando itinerário...');
 
       $http.get('http://' + $rootScope.dataServer.ip + ':' + $rootScope.dataServer.port + '/itinerary/' + line)
         .success(function(data){
-          console.log("Pontos: "+data.length);
+          console.log('Pontos: '+data.length);
           var itinerary = MapMarker.prepareItinerary(data);
           var path = new google.maps.Polyline({
             path: itinerary.spotList,
@@ -92,7 +95,6 @@ angular.module('riobus')
 
     var urlData = $location.absUrl().split('?')[1];
     if(urlData){
-      urlLines = urlData;
-      $scope.search();
+      $scope.search(urlData);
     }
   });
