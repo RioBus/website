@@ -32,6 +32,7 @@ angular.module('riobus')
       date[1] = tmp;
       date = date.join('/');
       var time = datetime[1];
+      data.sense = data.sense.replace(/ *\([^)]*\) */g, " ");
       return '<div style="line-height:1.35;overflow:hidden;white-space:nowrap;">' +
                 '<h6>'+data.order+' ('+data.line+')</h6>' +
                 'Atualizado em: ' + date + ' ' + time +'<br/>' +
