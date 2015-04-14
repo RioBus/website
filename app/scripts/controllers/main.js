@@ -45,8 +45,9 @@ angular.module('riobus')
           console.log('Got ' + records + ' records.');
           if(records>0){
             self.setMarkers(data);
-            if(lines.split(',').length===1) {
-              self.getItinerary(data[0].line);
+            var busLine = data[0].line;
+            if(lines.split(',').length===1 && busLine!=="sem linha") {
+              self.getItinerary(busLine);
             }
           }
           else{
