@@ -46,7 +46,7 @@ angular.module('riobus')
           if(records>0){
             self.setMarkers(data);
             if(lines.split(',').length===1) {
-              self.getItinerary(lines);
+              self.getItinerary(data[0].line);
             }
           }
           else{
