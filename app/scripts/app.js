@@ -23,8 +23,8 @@ angular
 
     $rootScope.dataServer = {
       platformId: 3,
-      ip: '127.0.0.1', //'rest.riob.us',
-      port: 8081
+      ip: 'rest.riob.us',
+      port: 80
     };
 
     $rootScope.updateInterval = 20000;
