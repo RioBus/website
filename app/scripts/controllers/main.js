@@ -30,14 +30,14 @@ angular.module('riobus')
         self.cancelLoop();
       }
 
-      self.doSearch(lines);
+      self.doSearch(lines, false);
       $rootScope.searchLoop = $interval(function(){
-        self.doSearch(lines);
+        self.doSearch(lines, true);
       }, $rootScope.updateInterval);
 
     };
 
-    self.doSearch = function(lines){
+    self.doSearch = function(lines, notFirst){
       MapMarker.clear();
       $http.get('http://' + $rootScope.dataServer.ip + ':' + $rootScope.dataServer.port + '/search/' + $rootScope.dataServer.platformId + '/' + lines)
         .success(function (data, status) {
@@ -45,8 +45,9 @@ angular.module('riobus')
           console.log('Got ' + records + ' records.');
           if(records>0){
             self.setMarkers(data);
+            if(!notFirst) MapMarker.fitBounds($rootScope.map);
             var busLine = data[0].line;
-            if(lines.split(',').length===1 && busLine!=="sem linha") {
+            if(lines.split(',').length===1 && busLine!=="indefinido") {
               self.getItinerary(busLine);
             }
           }
@@ -70,7 +71,6 @@ angular.module('riobus')
       var map = $rootScope.map;
       for(var i=0; i<data.length; i++){
         MapMarker.addMarker(map, data[i]);
-        MapMarker.fitBounds(map);
       }
     };
 
