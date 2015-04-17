@@ -94,9 +94,17 @@ angular.module('riobus')
     function itinerary(data){
       var it = {};
       it.spotList = [];
-      it.description = data[0].description;
-      it.line = data[0].line;
-      it.agency = data[0].agency;
+      
+      if (typeof data[0] != 'undefined') {
+		    it.description = data[0].description;
+  		  it.line = data[0].line;
+	  	  it.agency = data[0].agency;
+		  } else {
+			  console.log("data[0] undefined");
+		    it.description = "";
+		    it.line = "";
+		    it.agency = "";
+		  }
       it.color = pathColor;
 
       for(var i=0; i<data.length; i++){
