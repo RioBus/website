@@ -25,17 +25,11 @@ angular.module('riobus')
     var bounds = new google.maps.LatLngBounds();
 
     function formatInfowindowContent(data){
-      var datetime = data.timeStamp.split(' ');
-      var date = datetime[0].split('-');
-      var tmp = date[0];
-      date[0] = date[1];
-      date[1] = tmp;
-      date = date.join('/');
-      var time = datetime[1];
+      var datetime = new Date(data.timeStamp);
       data.sense = (data.line!=="indefinido")? data.sense.toString().replace(/ *\([^)]*\) */g, " ") : "Desconhecido";
       return '<div style="line-height:1.35;overflow:hidden;white-space:nowrap;">' +
                 '<h6>'+data.order+' ('+data.line+')</h6>' +
-                'Atualizado em: ' + date + ' ' + time +'<br/>' +
+                'Atualizado em: ' + datetime.toLocaleDateString() + ' ' + datetime.toLocaleTimeString() +'<br/>' +
                 'Velocidade: ' + data.speed + ' Km/h<br/>' +
                 'Sentido: ' + data.sense + '<br/>' +
               '</div>';
