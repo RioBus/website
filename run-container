@@ -1,2 +1,2 @@
 #!/bin/bash
-docker run -it --rm -p 8080:8080 -v $(pwd):/app -w /app --name riobus-web riobus-web /bin/bash
+docker run -it --rm -p 9000:9000 -p 35729:35729 -v $(pwd):/app -w /app --name riobus-web riobus-web /bin/bash
