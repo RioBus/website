@@ -37,6 +37,7 @@
     "node": ">=0.10.0"
   },
   "scripts": {
-    "test": "grunt test"
+    "test": "grunt test",
+    "configure": "npm install && bower install --allow-root"
   }
 }
