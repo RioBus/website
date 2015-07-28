@@ -82,7 +82,7 @@ angular.module('riobus')
           var itinerary = MapMarker.prepareItinerary(data);
           var path = new google.maps.Polyline({
             path: itinerary.spotList,
-            geodesic: false,
+            geodesic: true,
             strokeColor: itinerary.color,
             strokeOpacity: 0.4,
             strokeWeight: 5

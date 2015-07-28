@@ -15,16 +15,18 @@ angular
     'ngCookies',
     'ngResource',
     'ngSanitize',
-    'ngTouch'
+    'ngTouch',
+    'angularMoment'
   ])
+  //.constant('angularMomentConfig', { timezone: 'America/Sao_Paulo' })
   .run(function($rootScope){
 
     $('.modal-trigger').leanModal();
 
     var dataServer = {
       platformId: 3,
-      ip: '192.168.59.103',//'rest.riob.us',
-      port: 8080,
+      ip: 'rest.riob.us', //'192.168.59.103',
+      port: 80, //8080,
       userAgent: 'riobus-web-2.0'
     };
     

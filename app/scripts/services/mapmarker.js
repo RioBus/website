@@ -8,7 +8,7 @@
  * Factory in the riobus.
  */
 angular.module('riobus')
-  .factory('MapMarker', function () {
+  .factory('MapMarker', function (moment) {
 
     var markerIcons = {
       good: 'images/bus_green.png',
@@ -25,17 +25,11 @@ angular.module('riobus')
     var bounds = new google.maps.LatLngBounds();
 
     function formatInfowindowContent(data){
-      var datetime = data.timeStamp.split(' ');
-      var date = datetime[0].split('-');
-      var tmp = date[0];
-      date[0] = date[1];
-      date[1] = tmp;
-      date = date.join('/');
-      var time = datetime[1];
+      var tzOffset = ((new Date(data.timeStamp)).getTimezoneOffset()/60);
       data.sense = (data.line!=='indefinido')? data.sense.toString().replace(/ *\([^)]*\) */g, ' ') : 'Desconhecido';
       return '<div style="line-height:1.35;overflow:hidden;white-space:nowrap;">' +
                 '<h6>'+data.order+' ('+data.line+')</h6>' +
-                'Atualizado em: ' + date + ' ' + time +'<br/>' +
+                'Atualizado em: ' + moment(data.timeStamp).add(tzOffset, "H").format('DD/MM/YYYY HH:mm:ss a') +'<br/>' +
                 'Velocidade: ' + data.speed + ' Km/h<br/>' +
                 'Sentido: ' + data.sense + '<br/>' +
               '</div>';
@@ -71,8 +65,9 @@ angular.module('riobus')
     }
 
     function add(map, data) {
-      var gpsTime = new Date(data.timeStamp);
-      var iconPath = getIconPath((new Date() - gpsTime)/1000/60);
+      var tzOffset = ((new Date(data.timeStamp)).getTimezoneOffset()/60);
+      var gpsTime = moment(data.timeStamp).add(tzOffset, 'H');
+      var iconPath = getIconPath((moment() - gpsTime)/1000/60);
       var position = new google.maps.LatLng(data.latitude, data.longitude);
 
       var marker = new google.maps.Marker({
