@@ -1,5 +1,5 @@
 'use strict';
-
+/* global google, angular, toast */
 /**
  * @ngdoc function
  * @name riobus.controller:MainCtrl
@@ -29,9 +29,11 @@ angular.module('riobus')
       if ($rootScope.searchLoop) {
         self.cancelLoop();
       }
-
+      
+      if(lines.split(',').length===1 && lines!=='indefinido') { self.getItinerary(lines); }
       self.doSearch(lines, false);
       $rootScope.searchLoop = $interval(function(){
+        if(lines.split(',').length===1 && lines!=='indefinido') { self.getItinerary(lines); }
         self.doSearch(lines, true);
       }, $rootScope.updateInterval);
 
@@ -39,25 +41,23 @@ angular.module('riobus')
 
     self.doSearch = function(lines, notFirst){
       MapMarker.clear();
-      $http.get('http://' + $rootScope.dataServer.ip + ':' + $rootScope.dataServer.port + '/search/' + $rootScope.dataServer.platformId + '/' + lines)
-        .success(function (data, status) {
+      var config = { headers: { 'userAgent': $rootScope.getUserAgent() } };
+      $http.get($rootScope.getEndpoint() + '/v3/search/' + lines, config)
+        .success(function (data) {
           var records = data.length;
           console.log('Got ' + records + ' records.');
           if(records>0){
             self.setMarkers(data);
-            if(!notFirst) MapMarker.fitBounds($rootScope.map);
-            var busLine = data[0].line;
-            if(lines.split(',').length===1 && busLine!=="indefinido") {
-              self.getItinerary(busLine);
-            }
+            if(!notFirst){ MapMarker.fitBounds($rootScope.map); }
           }
           else{
             toast('Nenhum ônibus encontrado para a linha pesquisada.', toastTime);
             self.cancelLoop();
           }
         })
-        .error(function (data, status) {
+        .error(function (data) {
           self.cancelLoop();
+          console.log(data);
           toast('Ocorreu um erro interno. Tente novamente.', toastTime);
         });
     };
@@ -77,13 +77,12 @@ angular.module('riobus')
     self.getItinerary = function(line){
       console.log('Buscando itinerário...');
 
-      $http.get('http://' + $rootScope.dataServer.ip + ':' + $rootScope.dataServer.port + '/itinerary/' + line)
+      $http.get($rootScope.getEndpoint() + '/v3/itinerary/' + line)
         .success(function(data){
-          console.log('Pontos: '+data.length);
           var itinerary = MapMarker.prepareItinerary(data);
           var path = new google.maps.Polyline({
             path: itinerary.spotList,
-            geodesic: true,
+            geodesic: false,
             strokeColor: itinerary.color,
             strokeOpacity: 0.4,
             strokeWeight: 5

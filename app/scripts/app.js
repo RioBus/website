@@ -1,5 +1,5 @@
 'use strict';
-
+/* global angular, $, google */
 /**
  * @ngdoc overview
  * @name riobus
@@ -21,10 +21,23 @@ angular
 
     $('.modal-trigger').leanModal();
 
-    $rootScope.dataServer = {
+    var dataServer = {
       platformId: 3,
-      ip: 'rest.riob.us',
-      port: 80
+      ip: '192.168.59.103',//'rest.riob.us',
+      port: 8080,
+      userAgent: 'riobus-web-2.0'
+    };
+    
+    $rootScope.getEndpoint = function(){
+      return 'http://' + dataServer.ip + ':' + dataServer.port; 
+    };
+    
+    $rootScope.getPlatformId = function(){
+      return dataServer.platformId;
+    };
+    
+    $rootScope.getUserAgent = function() {
+      return dataServer.userAgent;
     };
 
     $rootScope.updateInterval = 20000;

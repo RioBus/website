@@ -1,5 +1,5 @@
 'use strict';
-
+/* global google */
 /**
  * @ngdoc service
  * @name riobus.MapFactory
@@ -32,7 +32,7 @@ angular.module('riobus')
       date[1] = tmp;
       date = date.join('/');
       var time = datetime[1];
-      data.sense = (data.line!=="indefinido")? data.sense.toString().replace(/ *\([^)]*\) */g, " ") : "Desconhecido";
+      data.sense = (data.line!=='indefinido')? data.sense.toString().replace(/ *\([^)]*\) */g, ' ') : 'Desconhecido';
       return '<div style="line-height:1.35;overflow:hidden;white-space:nowrap;">' +
                 '<h6>'+data.order+' ('+data.line+')</h6>' +
                 'Atualizado em: ' + date + ' ' + time +'<br/>' +
@@ -95,20 +95,13 @@ angular.module('riobus')
       var it = {};
       it.spotList = [];
       
-      if (typeof data[0] != 'undefined') {
-		    it.description = data[0].description;
-  		  it.line = data[0].line;
-	  	  it.agency = data[0].agency;
-		  } else {
-			  console.log("data[0] undefined");
-		    it.description = "";
-		    it.line = "";
-		    it.agency = "";
-		  }
+	    it.description = data.description;
+		  it.line = data.line;
+  	  it.agency = data.agency;
       it.color = pathColor;
 
-      for(var i=0; i<data.length; i++){
-        var spot = data[i];
+      for(var i=0; i<data.spots.length; i++){
+        var spot = data.spots[i];
         var location = new google.maps.LatLng(spot.latitude, spot.longitude);
         it.spotList.push(location);
       }
