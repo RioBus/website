@@ -24,10 +24,8 @@ angular
     $('.modal-trigger').leanModal();
 
     var dataServer = {
-      platformId: 3,
       ip: 'rest.riob.us', //'192.168.59.103',
-      port: 80, //8080,
-      userAgent: 'riobus-web-2.0'
+      port: 80 //8080
     };
     
     $rootScope.getEndpoint = function(){
@@ -36,10 +34,6 @@ angular
     
     $rootScope.getPlatformId = function(){
       return dataServer.platformId;
-    };
-    
-    $rootScope.getUserAgent = function() {
-      return dataServer.userAgent;
     };
 
     $rootScope.updateInterval = 20000;
