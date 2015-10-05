@@ -41,8 +41,7 @@ angular.module('riobus')
 
     self.doSearch = function(lines, notFirst){
       MapMarker.clear();
-      var config = { headers: { 'userAgent': $rootScope.getUserAgent() } };
-      $http.get($rootScope.getEndpoint() + '/v3/search/' + lines, config)
+      $http.get($rootScope.getEndpoint() + '/v3/search/' + lines)
         .success(function (data) {
           var records = data.length;
           console.log('Got ' + records + ' records.');
