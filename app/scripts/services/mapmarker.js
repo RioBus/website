@@ -70,11 +70,16 @@ angular.module('riobus')
       var iconPath = getIconPath((moment() - gpsTime)/1000/60);
       var position = new google.maps.LatLng(data.latitude, data.longitude);
 
+      var image = {
+        url: iconPath,
+        scaledSize: new google.maps.Size(36, 42)
+      };
+
       var marker = new google.maps.Marker({
         position: position,
         map: map,
         title: data.order + ' (' + data.line + ')',
-        icon: new google.maps.MarkerImage(iconPath)
+        icon: image
       });
 
       marker.info = new google.maps.InfoWindow({ content: formatInfowindowContent(data) });
