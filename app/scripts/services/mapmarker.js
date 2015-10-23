@@ -25,11 +25,10 @@ angular.module('riobus')
     var bounds = new google.maps.LatLngBounds();
 
     function formatInfowindowContent(data){
-      var tzOffset = ((new Date(data.timeStamp)).getTimezoneOffset()/60);
       data.sense = (data.line!=='indefinido')? data.sense.toString().replace(/ *\([^)]*\) */g, ' ') : 'Desconhecido';
       return '<div style="line-height:1.35;overflow:hidden;white-space:nowrap;">' +
                 '<h6>'+data.order+' ('+data.line+')</h6>' +
-                'Atualizado em: ' + moment(data.timeStamp).add(tzOffset, 'H').format('DD/MM/YYYY HH:mm:ss a') +'<br/>' +
+                'Atualizado em: ' + moment(data.timeStamp).format('DD/MM/YYYY HH:mm:ss') +'<br/>' +
                 'Velocidade: ' + data.speed + ' Km/h<br/>' +
                 'Sentido: ' + data.sense + '<br/>' +
               '</div>';
