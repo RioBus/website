@@ -36,6 +36,7 @@
   "engines": {
     "node": ">=0.10.0"
   },
+  "license": "GNU-GPL v2",
   "scripts": {
     "test": "grunt test",
     "configure": "npm install && bower install --allow-root"
