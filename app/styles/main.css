@@ -8,6 +8,7 @@ body {
 div.input-field button.prefix{
   background: none;
   border: none;
+  padding: 0;
 }
 
 div.row div.input-field *{
