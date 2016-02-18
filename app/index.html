@@ -5,7 +5,7 @@
     <title>RioBus</title>
     <meta name="description" content="Encontre seu ônibus em tempo real!">
     <meta name="keywords" content="riobus, rio, bus, rj, onibus, transporte, mobilidade, coletivo, pesquisar">
-    <meta name="viewport" content="width=device-width">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon" />
     <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
     <!-- build:css(.) styles/vendor.css -->
@@ -22,13 +22,13 @@
     <div id="map-canvas" style="position:absolute; width: 100%; height: 100%;"></div>
 
     <div class="container" ng-controller="MainCtrl">
-      <form class="search-box z-depth-1">
+      <form class="search-box z-depth-1" ng-submit="search()" hide-keyboard-on-submit>
         <div class="row">
           <div class="input-field col s11">
             <input id="busSearch" type="text" class="validate" ng-model="busLines">
             <label for="busSearch">Buscar ônibus</label>
-            <button class="mdi-action-search prefix" ng-click="search()"></button>
-            <button class="mdi-action-info prefix modal-trigger" id="info-icon" href="#infobox"></button>
+            <button class="mdi-action-search prefix" type="submit"></button>
+            <button class="mdi-action-info prefix modal-trigger" id="info-icon" href="#infobox" type="button"></button>
           </div>
         </div>
       </form>
@@ -114,6 +114,7 @@
         <!-- build:js({.tmp,app}) scripts/scripts.js -->
         <script src="scripts/app.js"></script>
         <script src="scripts/controllers/main.js"></script>
+        <script src="scripts/directives/hideKeyboard.js"></script>
         <script src="scripts/services/mapmarker.js"></script>
         <!-- endbuild -->
 </body>
