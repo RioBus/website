@@ -5,16 +5,20 @@
  * @name riobus.controller:MainCtrl
  * @description
  * # MainCtrl
- * Controller of the riobus
+ * Controller of riobus
  */
 angular.module('riobus')
-  .controller('MainCtrl', function ($scope, $rootScope, $http, $interval, MapMarker, $location) {
+  .controller('MainCtrl', function ($scope, $rootScope, $http, $interval, MapMarker, $location, ENV) {
 
     var self = this;
 
     var toastTime = 3000;
 
     $rootScope.searchLoop = null;
+
+    $rootScope.getEndpoint = function(){
+      return 'http://' + ENV.apiHost + ':' + ENV.apiPort; 
+    };
 
     $scope.search = function(data) {
       if(data){

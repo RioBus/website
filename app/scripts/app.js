@@ -10,6 +10,7 @@
  */
 angular
   .module('riobus', [
+    'config',
     'ngAnimate',
     'ngAria',
     'ngCookies',
@@ -22,19 +23,6 @@ angular
   .run(function($rootScope){
 
     $('.modal-trigger').leanModal();
-
-    var dataServer = {
-      ip: 'rest.riob.us', //'192.168.59.103',
-      port: 80 //8080
-    };
-    
-    $rootScope.getEndpoint = function(){
-      return 'http://' + dataServer.ip + ':' + dataServer.port; 
-    };
-    
-    $rootScope.getPlatformId = function(){
-      return dataServer.platformId;
-    };
 
     $rootScope.updateInterval = 20000;
 
