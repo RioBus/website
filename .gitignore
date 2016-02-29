@@ -6,3 +6,5 @@ bower_components
 legacy
 .idea
 .DS_Store
+
+app/scripts/config.js
