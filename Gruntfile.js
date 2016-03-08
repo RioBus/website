@@ -382,8 +382,13 @@ module.exports = function (grunt) {
             '*.html',
             'views/{,*/}*.html',
             'images/{,*/}*.{webp}',
-            'styles/fonts/{,*/}*.*'
+            '**/fonts/{,*/}*.*'
           ]
+        }, {
+          expand: true,
+          cwd: 'bower_components/materialize/dist',
+          dest: '<%= yeoman.dist %>',
+          src: ['font/**/*']
         }, {
           expand: true,
           cwd: '.tmp/images',
@@ -459,7 +464,7 @@ module.exports = function (grunt) {
       'wiredep',
       'useminPrepare',
       'concurrent:dist',
-      'autoprefixer',
+      'autoprefixer:dist',
       'concat',
       'ngAnnotate',
       'copy:dist',
