@@ -64,9 +64,8 @@ angular.module('riobus')
     }
 
     function add(map, data) {
-      var tzOffset = ((new Date(data.timeStamp)).getTimezoneOffset()/60);
-      var gpsTime = moment(data.timeStamp).add(tzOffset, 'H');
-      var iconPath = getIconPath((moment() - gpsTime)/1000/60);
+      var timeSinceUpdate = moment() - moment(data.timeStamp);
+      var iconPath = getIconPath(timeSinceUpdate/1000/60);
       var position = new google.maps.LatLng(data.latitude, data.longitude);
 
       var image = {
