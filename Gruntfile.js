@@ -382,8 +382,13 @@ module.exports = function (grunt) {
             '*.html',
             'views/{,*/}*.html',
             'images/{,*/}*.{webp}',
-            'styles/fonts/{,*/}*.*'
+            '**/fonts/{,*/}*.*'
           ]
+        }, {
+          expand: true,
+          cwd: 'bower_components/materialize/dist',
+          dest: '<%= yeoman.dist %>',
+          src: ['font/**/*']
         }, {
           expand: true,
           cwd: '.tmp/images',
@@ -440,11 +445,6 @@ module.exports = function (grunt) {
     ]);
   });
 
-  grunt.registerTask('server', 'DEPRECATED TASK. Use the "serve" task instead', function (target) {
-    grunt.log.warn('The `server` task has been deprecated. Use `grunt serve` to start a server.');
-    grunt.task.run(['serve:' + target]);
-  });
-
   grunt.registerTask('test', [
     'clean:server',
     'wiredep',
@@ -454,23 +454,28 @@ module.exports = function (grunt) {
     'karma'
   ]);
 
-  grunt.registerTask('build', [
-    'clean:dist',
-    'ngconstant:production',
-    'wiredep',
-    'useminPrepare',
-    'concurrent:dist',
-    'autoprefixer',
-    'concat',
-    'ngAnnotate',
-    'copy:dist',
-    'cdnify',
-    'cssmin',
-    'uglify',
-    'filerev',
-    'usemin',
-    'htmlmin'
-  ]);
+  grunt.registerTask('build', 'Build app for development. To build for production use --production', function() {
+    var environment = grunt.option('production') ? 'production' : 'development';
+    console.log('Building app for ' + environment + '...');
+
+    grunt.task.run([
+      'clean:dist',
+      'ngconstant:' + environment,
+      'wiredep',
+      'useminPrepare',
+      'concurrent:dist',
+      'autoprefixer:dist',
+      'concat',
+      'ngAnnotate',
+      'copy:dist',
+      'cdnify',
+      'cssmin',
+      'uglify',
+      'filerev',
+      'usemin',
+      'htmlmin'
+    ]);
+  });
 
   grunt.registerTask('default', [
     'newer:jshint',
