@@ -61,7 +61,8 @@ angular.module('riobus')
         .error(function (data) {
           self.cancelLoop();
           console.log(data);
-          toast('Ocorreu um erro interno. Tente novamente.', toastTime);
+          console.log('Ocorreu um erro interno.');
+          toast('Nenhum ônibus encontrado para a linha pesquisada.', toastTime);
         });
     };
 
