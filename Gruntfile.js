@@ -38,7 +38,7 @@ module.exports = function (grunt) {
         constants: {
           ENV: {
             name: 'development',
-            apiHost: '104.236.41.26',
+            apiHost: 'fredamsouza.duckdns.org',
             apiPort: '8080'
           }
         }
