@@ -41,6 +41,6 @@
   "scripts": {
     "test": "grunt test",
     "start": "grunt serve",
-    "postinstall": "bower install --allow-root"
+    "configure": "npm install && bower install --allow-root"
   }
 }
