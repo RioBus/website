@@ -45,8 +45,10 @@ angular.module('riobus')
 
     self.doSearch = function(lines, notFirst){
       MapMarker.clear();
-      $http.get($rootScope.getEndpoint() + '/v3/search/' + lines)
-        .success(function (data) {
+      var url = $rootScope.getEndpoint() + '/v3/search/' + lines;
+      $http.get(url)
+        .then(function (data) {
+          data = data.data;
           var records = data.length;
           console.log('Got ' + records + ' records.');
           if(records>0){
@@ -58,7 +60,7 @@ angular.module('riobus')
             self.cancelLoop();
           }
         })
-        .error(function (data) {
+        .catch(function (data) {
           self.cancelLoop();
           console.log(data);
           console.log('Ocorreu um erro interno.');
@@ -81,8 +83,10 @@ angular.module('riobus')
     self.getItinerary = function(line){
       console.log('Buscando itinerário...');
 
-      $http.get($rootScope.getEndpoint() + '/v3/itinerary/' + line)
-        .success(function(data){
+      var url = $rootScope.getEndpoint() + '/v3/itinerary/' + line;
+      $http.get(url)
+        .then(function(data){
+          data = data.data;
           var itinerary = MapMarker.prepareItinerary(data);
           var path = new google.maps.Polyline({
             path: itinerary.spotList,
@@ -93,6 +97,10 @@ angular.module('riobus')
           });
           path.setMap($rootScope.map);
           MapMarker.setItineraryData(path);
+        })
+        .catch(function (data) {
+          console.log(data);
+          console.log('Itinerário não encontrado.');
         });
 
     };
