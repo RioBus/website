@@ -541,3 +541,8 @@ FileETag None
 # <IfModule mod_headers.c>
 #    Header set Connection Keep-Alive
 # </IfModule>
+
+# Blocking iframes, allowing only from same origin
+Header set X-Frame-Options DENY
+Header always append X-Frame-Options SAMEORIGIN
+
