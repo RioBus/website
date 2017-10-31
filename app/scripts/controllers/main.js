@@ -17,7 +17,7 @@ angular.module('riobus')
     $rootScope.searchLoop = null;
 
     $rootScope.getEndpoint = function(){
-      return 'http://' + ENV.apiHost + ':' + ENV.apiPort; 
+      return 'http://rest.riob.us';
     };
 
     $scope.search = function(data) {
@@ -33,7 +33,7 @@ angular.module('riobus')
       if ($rootScope.searchLoop) {
         self.cancelLoop();
       }
-      
+
       if(lines.split(',').length===1 && lines!=='indefinido') { self.getItinerary(lines); }
       self.doSearch(lines, false);
       $rootScope.searchLoop = $interval(function(){
@@ -46,7 +46,8 @@ angular.module('riobus')
     self.doSearch = function(lines, notFirst){
       MapMarker.clear();
       $http.get($rootScope.getEndpoint() + '/v3/search/' + lines)
-        .success(function (data) {
+        .then(function (response) {
+          var data = response.data;
           var records = data.length;
           console.log('Got ' + records + ' records.');
           if(records>0){
@@ -58,10 +59,13 @@ angular.module('riobus')
             self.cancelLoop();
           }
         })
-        .error(function (data) {
+        .catch(function (data) {
           self.cancelLoop();
-          console.log(data);
-          toast('Ocorreu um erro interno. Tente novamente.', toastTime);
+          if (data.status !== 404) {
+            toast('Ocorreu um erro interno. Tente novamente.', toastTime);
+          } else {
+            toast('Nenhum ônibus encontrado para a linha pesquisada.', toastTime);
+          }
         });
     };
 
@@ -81,7 +85,8 @@ angular.module('riobus')
       console.log('Buscando itinerário...');
 
       $http.get($rootScope.getEndpoint() + '/v3/itinerary/' + line)
-        .success(function(data){
+        .then(function(response){
+          var data = response.data;
           var itinerary = MapMarker.prepareItinerary(data);
           var path = new google.maps.Polyline({
             path: itinerary.spotList,
@@ -92,7 +97,8 @@ angular.module('riobus')
           });
           path.setMap($rootScope.map);
           MapMarker.setItineraryData(path);
-        });
+        })
+        .catch(function (data) {});
 
     };
 
