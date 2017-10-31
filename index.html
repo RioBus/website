@@ -1,58 +1,7 @@
-<!DOCTYPE html>
-<html>
+<!doctype html> <html class="no-js"> <head> <meta charset="utf-8"> <title>RioBus</title> <meta name="description" content="Encontre seu ônibus em tempo real!"> <meta name="keywords" content="riobus, rio, bus, rj, onibus, transporte, mobilidade, coletivo, pesquisar"> <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"> <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon"> <!-- Place favicon.ico and apple-touch-icon.png in the root directory --> <link rel="stylesheet" href="styles/vendor.bc1d73fe.css"> <link rel="stylesheet" href="styles/main.370cf999.css">  <body ng-app="riobus"> <div id="map-canvas" style="position:absolute; width: 100%; height: 100%"></div> <div class="container" ng-controller="MainCtrl"> <form class="search-box z-depth-1" ng-submit="search()" hide-keyboard-on-submit> <div class="row"> <div class="input-field col s11"> <input id="busSearch" type="text" class="validate" ng-model="busLines"> <label for="busSearch">Buscar ônibus</label> <button class="mdi-action-search prefix" type="submit"></button> <button class="mdi-action-info prefix modal-trigger" id="info-icon" href="#infobox" type="button"></button> </div> </div> </form> <div id="infobox" class="modal"> <div class="modal-content"> <h4>RioBus</h4> <p> O <b>RioBus</b> é um sistema colaborativo de monitoramento de ônibus em tempo real, que utiliza a API de dados abertos de mobilidade urbana fornecida pela parceria entre a <a href="http://www.rio.rj.gov.br" target="_blank">Prefeitura do Rio de Janeiro</a> e a <a href="http://www.fetranspor.com.br" target="_blank">FETRANSPOR</a>. Seu objetivo principal é ajudar o cidadão do Rio de Janeiro, seja ele morador ou visitante, a se deslocar pela cidade. </p> <p> O serviço é desenvolvido de forma colaborativa, e por isso depende da sua ajuda para melhorar, seja dando apenas um feedback ou aprimorando o código. </p> <h5>Como funciona?</h5> <p> Basta digitar a linha do ônibus que você deseja encontrar na caixa de busca e a posição de cada carro aparecerá no mapa. Também pode ser feita a busca diretamente pela URL (exemplo:<a href="http://riob.us/?485">http://riob.us/?485</a>). Você tambem pode buscar os ônibus que fazem parte dos consórcios de ônibus do município. É só pesquisar pelo nome do consórcio (por exemplo: Transcarioca), que aparecerão todos os ônibus pertencentes a esse consórcio. E, por último, a busca também pode ser feita por meio de palavras-chave que possam identificar o ônibus. Digitando a palavra-chave, todos os ônibus com este identificador estarão no mapa. Para ver mais informações sobre o ônibus, clique sobre o marcador. </p> <h5>Legenda dos marcadores</h5> <ul> <li><b>Verde:</b> atualizado há menos de 5 min</li> <li><b>Amarelo:</b> atualizado entre 5 e 10 min atrás</li> <li><b>Vermelho:</b> atualizado há mais de 10 min</li> </ul> <h5>Gostou do projeto?</h5> <p> Você pode colaborar com o projeto sempre nos enviando suas críticas e sugestões através da nossa página no Facebook. Ou então, caso você seja o tipo que prefere pôr a mão na massa, pode nos ajudar a aprimorar o nosso código, que está hospedado publicamente no Github. O código está licensiado sob a licença <i>GNU GPL v2</i>, isso quer dizer que você pode alterar e reutilizar à vontade! </p> <p> <a href="http://www.rio.rj.gov.br/web/iplanrio" target="_blank"><img src="images/icon-iplanrio.png" title="Iplanrio" class="icon-special-links"></a> <a href="http://www.facebook.com/RioBusOficial" target="_blank"><img src="images/icon-facebook.png" title="Facebook" class="icon-special-links"></a> <a href="http://github.com/riobus" target="_blank"><img src="images/icon-github.png" title="Github" class="icon-special-links"></a> </p> </div> <div class="modal-footer"> <a href="#" class="waves-effect btn-flat modal-action modal-close">Fechar</a> </div> </div> </div> <a href="https://play.google.com/store/apps/details?id=com.tormentaLabs.riobus" target="_blank" class="app-btn" id="btn-googleplay"> <img alt="Baixe na Google Play" src="images/btn-googleplay.png"> </a> <a href="https://itunes.apple.com/br/app/rio-bus-acompanhe-os-onibus/id884914334?mt=8" target="_blank" class="app-btn" id="btn-appstore"> <img alt="Baixe na App Store" src="images/btn-appstore.png"> </a> <script>!function(A,n,g,u,l,a,r){A.GoogleAnalyticsObject=l,A[l]=A[l]||function(){
+       (A[l].q=A[l].q||[]).push(arguments)},A[l].l=+new Date,a=n.createElement(g),
+       r=n.getElementsByTagName(g)[0],a.src=u,r.parentNode.insertBefore(a,r)
+       }(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-  <head>
-    <meta charset='utf-8'>
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="description" content="Riobus-web : Rio de Janeiro bus geolocalization using Data.Rio API">
-
-    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
-
-    <title>Riobus-web</title>
-  </head>
-
-  <body>
-
-    <!-- HEADER -->
-    <div id="header_wrap" class="outer">
-        <header class="inner">
-          <a id="forkme_banner" href="https://github.com/marco-jardim/riobus-web">View on GitHub</a>
-
-          <h1 id="project_title">Riobus-web</h1>
-          <h2 id="project_tagline">Rio de Janeiro bus geolocalization using Data.Rio API</h2>
-
-            <section id="downloads">
-              <a class="zip_download_link" href="https://github.com/marco-jardim/riobus-web/zipball/master">Download this project as a .zip file</a>
-              <a class="tar_download_link" href="https://github.com/marco-jardim/riobus-web/tarball/master">Download this project as a tar.gz file</a>
-            </section>
-        </header>
-    </div>
-
-    <!-- MAIN CONTENT -->
-    <div id="main_content_wrap" class="outer">
-      <section id="main_content" class="inner">
-        <h1>
-<a name="riobus" class="anchor" href="#riobus"><span class="octicon octicon-link"></span></a>RioBus</h1>
-
-<h1></h1>
-
-<p><a href="http://riob.us">http://riob.us</a></p>
-
-<p>Os dados são oferecidos publicamente pela prefeitura do Rio de Janeiro, em parceria com a FETRANSPOR e Iplanrio. A posição dos ônibus são recuparadas pelo GPS embarcado neles, enviados para a FETRANSPOR e, por fim, a Iplanrio a disponibiliza na página do projeto de dados abertos <a href="http://data.rio.rj.gov.br/dataset/gps-de-onibus">Data.Rio</a>.</p>
-
-<p>Para rodá-lo descompacte em um container web com suporte ao PHP. O Javascript da página usará o proxy.php para recuperar a posição dos ônibus.</p>
-      </section>
-    </div>
-
-    <!-- FOOTER  -->
-    <div id="footer_wrap" class="outer">
-      <footer class="inner">
-        <p class="copyright">Riobus-web maintained by <a href="https://github.com/marco-jardim">marco-jardim</a></p>
-        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
-      </footer>
-    </div>
-
-    
-
-  </body>
-</html>
+       ga('create', 'UA-49628280-1');
+       ga('send', 'pageview');</script> <script type="text/javascript" src="http://maps.google.com/maps/api/js?key=AIzaSyArtMr7fLDp7J0DpD4XRK37nblIP0UDUfM&sensor=true"></script> <script src="scripts/vendor.6cd4ed2d.js"></script> <script src="scripts/scripts.b23b23d3.js"></script>  
