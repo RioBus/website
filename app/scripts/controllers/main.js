@@ -17,7 +17,7 @@ angular.module('riobus')
     $rootScope.searchLoop = null;
 
     $rootScope.getEndpoint = function(){
-      return 'http://' + ENV.apiHost + ':' + ENV.apiPort; 
+      return 'http://rest.riob.us';
     };
 
     $scope.search = function(data) {
@@ -33,7 +33,7 @@ angular.module('riobus')
       if ($rootScope.searchLoop) {
         self.cancelLoop();
       }
-      
+
       if(lines.split(',').length===1 && lines!=='indefinido') { self.getItinerary(lines); }
       self.doSearch(lines, false);
       $rootScope.searchLoop = $interval(function(){
@@ -45,10 +45,9 @@ angular.module('riobus')
 
     self.doSearch = function(lines, notFirst){
       MapMarker.clear();
-      var url = $rootScope.getEndpoint() + '/v3/search/' + lines;
-      $http.get(url)
-        .then(function (data) {
-          data = data.data;
+      $http.get($rootScope.getEndpoint() + '/v3/search/' + lines)
+        .then(function (response) {
+          var data = response.data;
           var records = data.length;
           console.log('Got ' + records + ' records.');
           if(records>0){
@@ -62,9 +61,11 @@ angular.module('riobus')
         })
         .catch(function (data) {
           self.cancelLoop();
-          console.log(data);
-          console.log('Ocorreu um erro interno.');
-          toast('Nenhum ônibus encontrado para a linha pesquisada.', toastTime);
+          if (data.status !== 404) {
+            toast('Ocorreu um erro interno. Tente novamente.', toastTime);
+          } else {
+            toast('Nenhum ônibus encontrado para a linha pesquisada.', toastTime);
+          }
         });
     };
 
@@ -83,10 +84,9 @@ angular.module('riobus')
     self.getItinerary = function(line){
       console.log('Buscando itinerário...');
 
-      var url = $rootScope.getEndpoint() + '/v3/itinerary/' + line;
-      $http.get(url)
-        .then(function(data){
-          data = data.data;
+      $http.get($rootScope.getEndpoint() + '/v3/itinerary/' + line)
+        .then(function(response){
+          var data = response.data;
           var itinerary = MapMarker.prepareItinerary(data);
           var path = new google.maps.Polyline({
             path: itinerary.spotList,
@@ -98,10 +98,7 @@ angular.module('riobus')
           path.setMap($rootScope.map);
           MapMarker.setItineraryData(path);
         })
-        .catch(function (data) {
-          console.log(data);
-          console.log('Itinerário não encontrado.');
-        });
+        .catch(function (data) {});
 
     };
 
