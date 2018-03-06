@@ -1,0 +1,334 @@
+<html>
+<head>
+<script type="text/javascript"
+  src="dygraph-combined-dev.js"></script>
+  <script type="text/javascript"
+  src="smooth-plotter.js"></script>
+  <script type="text/javascript"
+  src="synchronizer.js"></script>
+</head>
+<body>
+
+<div id="control">
+	<p>
+	<b>Show Series:</b>
+	</p>
+	<p>
+	<input id="0" type="checkbox" onclick="change(this)">
+	<label for="0"> Temperature</label>
+	<br>
+	<input id="1" type="checkbox" onclick="change(this)" >
+	<label for="1"> Light</label>
+	<br>
+	<input id="2" type="checkbox" onclick="change(this)" checked="">
+	<label for="2"> Air Quality</label>
+	<br>
+	<input id="3" type="checkbox" onclick="change(this)">
+	<label for="3"> Sound</label>
+	<br>
+	<input id="4" type="checkbox" onclick="change(this)" >
+	<label for="4"> Humidity</label>
+	<br>
+	<input id="5" type="checkbox" onclick="change(this)" >
+	<label for="5"> Dust</label>
+	<br>
+	<input id="6" type="checkbox" onclick="change(this)" checked="">
+	<label for="6"> Bus transit</label>
+	<br>
+	<input id="7" type="checkbox" onclick="change(this)" >
+	<label for="7"> Bus Average Speed</label>
+	<br>
+</div>
+
+<div id="graphs">
+	<div id="OurHomeMakerSpace_DataCanvas_at_Rio">
+		<div class="text">
+		  <p><a href="https://www.google.com.br/maps/place/22%C2%B057'50.6%22S+43%C2%B013'03.1%22W/@-22.964066,-43.2175255,17z/data=!3m1!4b1!4m2!3m1!1s0x0:0x0" target="_blank">Sensor: OurHomeMakerSpace_DataCanvas@Rio</a></p>
+		</p>
+		</div>
+		<div id="OurHomeMakerSpace_DataCanvas_at_Rio_Graph"
+		  style="width:490px; height:330px;">
+		</div>
+	</div>
+	<hr>
+	<div id="BarmaCanvas">
+		<div class="text">
+		  <p><a href="https://www.google.com.br/maps/place/22%C2%B056'39.7%22S+43%C2%B009'43.8%22W/@-22.944356,-43.162153,15z/data=!4m2!3m1!1s0x0:0x0" target="_blank">Sensor: BarmaCanvas</a></p>
+		</div>
+		<div id="BarmaCanvas_Graph"
+		  style="width:490px; height:330px;">
+		</div>
+	</div>
+	<hr>
+	<div id="Cavalo">
+		<div class="text">
+		  <p><a href="https://www.google.com.br/maps/place/22%C2%B055'38.8%22S+43%C2%B014'39.7%22W/@-22.927436,-43.244369,17z/data=!3m1!4b1!4m2!3m1!1s0x0:0x0" target="_blank">Sensor: Cavalo</a></p>
+		</div>
+		<div id="Cavalo_Graph"
+		  style="width:490px; height:330px;">
+		</div>
+	</div>
+	<hr>
+	<div id="Crispie_Cookie">
+		<div class="text">
+		  <p><a href="https://www.google.com.br/maps/place/22%C2%B055'38.6%22S+43%C2%B014'24.4%22W/@-22.927404,-43.24012,17z/data=!3m1!4b1!4m2!3m1!1s0x0:0x0" target="_blank">Sensor: Crispie_Cookie</a></p>
+		</div>
+		<div id="Crispie_Cookie_Graph"
+		  style="width:490px; height:330px;">
+		</div>
+	</div>
+	<hr>
+	<div id="gaveadatacanvas">
+		<div class="text">
+		  <p><a href="https://www.google.com.br/maps/place/22%C2%B058'51.0%22S+43%C2%B014'03.6%22W/@-22.980838,-43.234322,17z/data=!3m1!4b1!4m2!3m1!1s0x0:0x0" target="_blank">Sensor: gaveadatacanvas</a></p>
+		</div>
+		<div id="gaveadatacanvas_Graph"
+		  style="width:490px; height:330px;">
+		</div>
+	</div>
+	<hr>
+	<div id="kennyduino">
+		<div class="text">
+		  <p><a href="https://www.google.com.br/maps/place/22%C2%B050'34.0%22S+43%C2%B015'47.7%22W/@-22.842785,-43.263258,17z/data=!3m1!4b1!4m2!3m1!1s0x0:0x0" target="_blank">Sensor: kennyduino</a></p>
+		</div>
+		<div id="kennyduino_Graph"
+		  style="width:490px; height:330px;">
+		</div>
+	</div>
+	<hr>
+	<div id="nico">
+		<div class="text">
+		  <p><a href="https://www.google.com.br/maps/place/22%C2%B057'22.1%22S+43%C2%B011'56.1%22W/@-22.956139,-43.198912,17z/data=!3m1!4b1!4m2!3m1!1s0x0:0x0" target="_blank">Sensor: nico</a></p>
+		</div>
+		<div id="nico_Graph"
+		  style="width:490px; height:330px;">
+		</div>
+	</div>
+	<hr>
+	<div id="Rio40">
+		<div class="text">
+		  <p><a href="https://www.google.com.br/maps/place/22%C2%B054'48.9%22S+43%C2%B010'59.8%22W/@-22.913573,-43.183264,17z/data=!3m1!4b1!4m2!3m1!1s0x0:0x0" target="_blank">Sensor: Rio40</a></p>
+		</div>
+		<div id="Rio40_Graph"
+		  style="width:490px; height:330px;">
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+  var graphOurHomeMakerSpace_DataCanvas_at_Rio = new Dygraph(
+    document.getElementById("OurHomeMakerSpace_DataCanvas_at_Rio_Graph"),
+    "./traffic/OurHomeMakerSpace_DataCanvas_at_Rio.csv", // path to CSV file
+    {	
+		plotter: smoothPlotter,
+		visibility: [false, false, true, false, false, false, true, false],
+		highlightSeriesOpts: {
+          strokeWidth: 3,
+          strokeBorderWidth: 1,
+          highlightCircleSize: 5
+        }
+	}          // options
+  );
+  
+  var graphBarmaCanvas = new Dygraph(
+    document.getElementById("BarmaCanvas_Graph"),
+    "./traffic/BarmaCanvas.csv", // path to CSV file
+    {	
+		visibility: [false, false, true, false, false, false, true, false],
+		highlightSeriesOpts: {
+          strokeWidth: 3,
+          strokeBorderWidth: 1,
+          highlightCircleSize: 5
+        },
+		plotter: smoothPlotter,
+	}
+   // options
+  );
+  var graphCavalo = new Dygraph(
+    document.getElementById("Cavalo_Graph"),
+    "./traffic/Cavalo.csv", // path to CSV file
+    {	
+		plotter: smoothPlotter,
+		visibility: [false, false, true, false, false, false, true, false],
+		highlightSeriesOpts: {
+          strokeWidth: 3,
+          strokeBorderWidth: 1,
+          highlightCircleSize: 5
+        }
+	}          // options
+  );
+  var graphCrispie_Cookie = new Dygraph(
+    document.getElementById("Crispie_Cookie_Graph"),
+    "./traffic/Crispie_Cookie.csv", // path to CSV file
+    {	
+		plotter: smoothPlotter,
+		visibility: [false, false, true, false, false, false, true, false],
+		highlightSeriesOpts: {
+          strokeWidth: 3,
+          strokeBorderWidth: 1,
+          highlightCircleSize: 5
+        }
+	}          // options
+  );
+  var graphgaveadatacanvas = new Dygraph(
+    document.getElementById("gaveadatacanvas_Graph"),
+    "./traffic/gaveadatacanvas.csv", // path to CSV file
+    {	
+		plotter: smoothPlotter,
+		visibility: [false, false, true, false, false, false, true, false],
+		highlightSeriesOpts: {
+          strokeWidth: 3,
+          strokeBorderWidth: 1,
+          highlightCircleSize: 5
+        }
+	}          // options
+  );
+  var graphkennyduino = new Dygraph(
+    document.getElementById("kennyduino_Graph"),
+    "./traffic/kennyduino.csv", // path to CSV file
+    {	
+		plotter: smoothPlotter,
+		visibility: [false, false, true, false, false, false, true, false],
+		highlightSeriesOpts: {
+          strokeWidth: 3,
+          strokeBorderWidth: 1,
+          highlightCircleSize: 5
+        }
+	}          // options
+  );
+  var graphnico = new Dygraph(
+    document.getElementById("nico_Graph"),
+    "./traffic/nico.csv", // path to CSV file
+    {	
+		plotter: smoothPlotter,
+		visibility: [false, false, true, false, false, false, true, false],
+		highlightSeriesOpts: {
+          strokeWidth: 3,
+          strokeBorderWidth: 1,
+          highlightCircleSize: 5
+        }
+	}          // options
+  );
+  var graphRio40 = new Dygraph(
+    document.getElementById("Rio40_Graph"),
+    "./traffic/Rio40.csv", // path to CSV file
+    {	
+		plotter: smoothPlotter,
+		visibility: [false, false, true, false, false, false, true, false],
+		highlightSeriesOpts: {
+          strokeWidth: 3,
+          strokeBorderWidth: 1,
+          highlightCircleSize: 5
+        }
+	}          // options
+  );
+  
+    // Non traffic area
+  var graphswissnexbrasil = new Dygraph(
+    document.getElementById("swissnexbrasil_Graph"),
+    "./pure/swissnexbrasil.csv", // path to CSV file
+    {	
+		plotter: smoothPlotter,
+		visibility: [false, false, true, false, false, false],
+		highlightSeriesOpts: {
+          strokeWidth: 3,
+          strokeBorderWidth: 1,
+          highlightCircleSize: 5
+        }
+	}          // options
+  );
+  var graphBarraDaTijucaCanvas = new Dygraph(
+    document.getElementById("BarraDaTijucaCanvas_Graph"),
+    "./pure/BarraDaTijucaCanvas.csv", // path to CSV file
+    {	
+		plotter: smoothPlotter,
+		visibility: [false, false, true, false, false, false],
+		highlightSeriesOpts: {
+          strokeWidth: 3,
+          strokeBorderWidth: 1,
+          highlightCircleSize: 5
+        }
+	}          // options
+  );
+  var graphcoppentt = new Dygraph(
+    document.getElementById("coppentt_Graph"),
+    "./pure/coppentt.csv", // path to CSV file
+    {	
+		plotter: smoothPlotter,
+		visibility: [false, false, true, false, false, false],
+		highlightSeriesOpts: {
+          strokeWidth: 3,
+          strokeBorderWidth: 1,
+          highlightCircleSize: 5
+        }
+	}          // options
+  );
+  var grapholabi = new Dygraph(
+    document.getElementById("olabi_Graph"),
+    "./pure/olabi.csv", // path to CSV file
+    {	
+		plotter: smoothPlotter,
+		visibility: [false, false, true, false, false, false],
+		highlightSeriesOpts: {
+          strokeWidth: 3,
+          strokeBorderWidth: 1,
+          highlightCircleSize: 5
+        }
+	}          // options
+  );
+  var graphvaleriab = new Dygraph(
+    document.getElementById("valeriab_Graph"),
+    "./pure/valeriab.csv", // path to CSV file
+    {	
+		plotter: smoothPlotter,
+		visibility: [false, false, true, false, false, false],
+		highlightSeriesOpts: {
+          strokeWidth: 3,
+          strokeBorderWidth: 1,
+          highlightCircleSize: 5
+        }
+	}          // options
+  );
+  
+   function change(el) {
+	if (parseInt(el.id) < 6) {
+		graphOurHomeMakerSpace_DataCanvas_at_Rio.setVisibility(parseInt(el.id), el.checked);
+		graphRio40.setVisibility(parseInt(el.id), el.checked);
+		graphnico.setVisibility(parseInt(el.id), el.checked);
+		graphkennyduino.setVisibility(parseInt(el.id), el.checked);
+		graphgaveadatacanvas.setVisibility(parseInt(el.id), el.checked);
+		graphCrispie_Cookie.setVisibility(parseInt(el.id), el.checked);
+		graphCavalo.setVisibility(parseInt(el.id), el.checked);
+		graphBarmaCanvas.setVisibility(parseInt(el.id), el.checked);
+		
+		graphswissnexbrasil.setVisibility(parseInt(el.id), el.checked);
+		graphvaleriab.setVisibility(parseInt(el.id), el.checked);
+		grapholabi.setVisibility(parseInt(el.id), el.checked);
+		graphcoppentt.setVisibility(parseInt(el.id), el.checked);
+		graphBarraDaTijucaCanvas.setVisibility(parseInt(el.id), el.checked);	
+	} else {
+		graphOurHomeMakerSpace_DataCanvas_at_Rio.setVisibility(parseInt(el.id), el.checked);
+		graphRio40.setVisibility(parseInt(el.id), el.checked);
+		graphnico.setVisibility(parseInt(el.id), el.checked);
+		graphkennyduino.setVisibility(parseInt(el.id), el.checked);
+		graphgaveadatacanvas.setVisibility(parseInt(el.id), el.checked);
+		graphCrispie_Cookie.setVisibility(parseInt(el.id), el.checked);
+		graphCavalo.setVisibility(parseInt(el.id), el.checked);
+		graphBarmaCanvas.setVisibility(parseInt(el.id), el.checked);
+	}
+}
+
+var graphs = [graphOurHomeMakerSpace_DataCanvas_at_Rio,
+	graphRio40,
+	graphnico,
+	graphkennyduino,
+	graphgaveadatacanvas,
+	graphCrispie_Cookie,
+	graphCavalo,
+	graphBarmaCanvas];
+
+//var sync = Dygraph.synchronize(graphs);
+
+</script>
+</body>
+</html>

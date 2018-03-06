@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bus Microclimate Impact</title>
+<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="css/bootstrap-theme.min.css">
+<script type="text/javascript" src="http://code.jquery.com/jquery.min.js"></script>
+<script type="text/javascript" src="js/bootstrap.min.js"></script>
+<script type="text/javascript"
+  src="janeiro/dygraph-combined-dev.js"></script>
+  <script type="text/javascript"
+  src="janeiro/smooth-plotter.js"></script>
+  <script type="text/javascript"
+  src="janeiro/synchronizer.js"></script>
+</head>
+<body>
+	<nav id="myNavbar" class="navbar navbar-default navbar-inverse navbar-fixed-top" role="navigation">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbarCollapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">Hot Week</a>
+            </div>
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <ul class="nav navbar-nav">
+                    <li ><a href="http://riob.us/clima/">Home</a></li>
+                    <li class="active"><a href="http://riob.us/clima/janeiro.html">Hot Week</a></li>
+					<li><a href="http://riob.us/clima/mapaJaneiro.html">Hot Week Map</a></li>
+                    <li><a href="http://riob.us/clima/marco.html">Cool Week</a></li>
+					<li><a href="http://riob.us/clima/mapaMarco.html">Cool Week Map</a></li>						
+					<li><a href="https://github.com/RioBus" target="_blank">Rio Bus Project</a></li>
+					<!-- <li><a href="#">About</a></li> -->
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+	<div class="container">
+		
+		<div class="row" id="control" style="margin-top: 90px;">
+			<h3>This is the study of correlation between microclimate air pollution and bus traffic in Rio de Janeiro.</h3>
+			<br>
+			<h4>The graphics show data series from Rio de Janeiro environmental sensors, plus data from bus traffic up to 50m away from the sensor location.</h4>
+			<h4>Bus traffic and Air Pollution data series is pre-enabled to show the correlative evidence where the microclimate is impacted with air pollutants from heavy bus traffic. Examples with extreme high traffic, such as OurHomeMakerSpace_DataCanvas@Rio's sensor, clearly shows that sustained high traffic causes accumulation of air pollution. This accumulation is due to limited atmospheric pollution dispersal capacity. Lowering the traffic, usually at night, the atmosphere disperses the gases and naturally clean the pollution.</h4>
+			<h4>Sensors without bus traffic nearby don't vary the air pollution ratio too much. They usually sustain and follow the city average low to high air pollution measured data gap.</h4>
+			<h4>The data was collected between 25/01/2015 and 31/01/2015, an extremely hot week in Rio (up to 46C at valeriab's sensor!), with short heavy rains at 18:00. This particular week was chosen because the climatic conditions are ideal and helps the air pollutants natural transportation to high layers of the atmosphere, decreasing city pollution.</h4>
+			<br>
+			<hr>
+			<p>
+			<b>Show Data Series:</b>
+			</p>
+			<p>
+			<input id="0" type="checkbox" onclick="change(this)">
+			<label for="0"> Temperature</label>
+			<br>
+			<input id="1" type="checkbox" onclick="change(this)" >
+			<label for="1"> Light</label>
+			<br>
+			<input id="2" type="checkbox" onclick="change(this)" checked="">
+			<label for="2"> Air Quality</label>
+			<br>
+			<input id="3" type="checkbox" onclick="change(this)">
+			<label for="3"> Sound</label>
+			<br>
+			<input id="4" type="checkbox" onclick="change(this)" >
+			<label for="4"> Humidity</label>
+			<br>
+			<input id="5" type="checkbox" onclick="change(this)" >
+			<label for="5"> Dust</label>
+			<br>
+			<input id="6" type="checkbox" onclick="change(this)" checked="">
+			<label for="6"> Bus transit per hour</label>
+			<br>
+			<input id="7" type="checkbox" onclick="change(this)" >
+			<label for="7"> Bus Average Speed per hour</label>
+			<br>
+		</div>
+		
+
+		<hr>	
+			
+		<div id="graphs">
+		
+			<div class="row">
+				<div class="text">
+					<h4>Sensor close to bus traffic (less than 50m)</h4>
+				</div>
+			</div>
+			<br>
+
+			<div class="row" id="OurHomeMakerSpace_DataCanvas_at_Rio">
+				<div class="text">
+				  <p><a href="https://www.google.com.br/maps/place/22%C2%B057'50.6%22S+43%C2%B013'03.1%22W/@-22.964066,-43.2175255,17z/data=!3m1!4b1!4m2!3m1!1s0x0:0x0" target="_blank">Sensor: OurHomeMakerSpace_DataCanvas@Rio</a></p>
+				</p>
+				</div>
+				<div id="OurHomeMakerSpace_DataCanvas_at_Rio_Graph"
+				  style="width:640px; height:480px;">
+				</div>
+			</div>
+			
+			<hr>
+			
+			<div class="row" id="BarmaCanvas">
+				<div class="text">
+				  <p><a href="https://www.google.com.br/maps/place/22%C2%B056'39.7%22S+43%C2%B009'43.8%22W/@-22.944356,-43.162153,15z/data=!4m2!3m1!1s0x0:0x0" target="_blank">Sensor: BarmaCanvas</a></p>
+				</div>
+				<div id="BarmaCanvas_Graph"
+				  style="width:640px; height:480px;">
+				</div>
+			</div>
+			
+			<hr>
+			
+			<div class="row" id="Cavalo">
+				<div class="text">
+				  <p><a href="https://www.google.com.br/maps/place/22%C2%B055'38.8%22S+43%C2%B014'39.7%22W/@-22.927436,-43.244369,17z/data=!3m1!4b1!4m2!3m1!1s0x0:0x0" target="_blank">Sensor: Cavalo</a></p>
+				</div>
+				<div id="Cavalo_Graph"
+				  style="width:640px; height:480px;">
+				</div>
+			</div>
+			
+			<hr>
+			
+			<div class="row" id="Crispie_Cookie">
+				<div class="text">
+				  <p><a href="https://www.google.com.br/maps/place/22%C2%B055'38.6%22S+43%C2%B014'24.4%22W/@-22.927404,-43.24012,17z/data=!3m1!4b1!4m2!3m1!1s0x0:0x0" target="_blank">Sensor: Crispie_Cookie</a></p>
+				</div>
+				<div id="Crispie_Cookie_Graph"
+				  style="width:640px; height:480px;">
+				</div>
+			</div>
+			
+			<hr>
+			
+			<div class="row" id="gaveadatacanvas">
+				<div class="text">
+				  <p><a href="https://www.google.com.br/maps/place/22%C2%B058'51.0%22S+43%C2%B014'03.6%22W/@-22.980838,-43.234322,17z/data=!3m1!4b1!4m2!3m1!1s0x0:0x0" target="_blank">Sensor: gaveadatacanvas</a></p>
+				</div>
+				<div id="gaveadatacanvas_Graph"
+				  style="width:640px; height:480px;">
+				</div>
+			</div>
+			
+			<hr>
+			
+			<div class="row" id="kennyduino">
+				<div class="text">
+				  <p><a href="https://www.google.com.br/maps/place/22%C2%B050'34.0%22S+43%C2%B015'47.7%22W/@-22.842785,-43.263258,17z/data=!3m1!4b1!4m2!3m1!1s0x0:0x0" target="_blank">Sensor: kennyduino</a></p>
+				</div>
+				<div id="kennyduino_Graph"
+				  style="width:640px; height:480px;">
+				</div>
+			</div>
+			
+			<hr>
+			
+			<div class="row" id="nico">
+				<div class="text">
+				  <p><a href="https://www.google.com.br/maps/place/22%C2%B057'22.1%22S+43%C2%B011'56.1%22W/@-22.956139,-43.198912,17z/data=!3m1!4b1!4m2!3m1!1s0x0:0x0" target="_blank">Sensor: nico</a></p>
+				</div>
+				<div id="nico_Graph"
+				  style="width:640px; height:480px;">
+				</div>
+			</div>
+			
+			<hr>
+			
+			<div class="row" id="Rio40">
+				<div class="text">
+				  <p><a href="https://www.google.com.br/maps/place/22%C2%B054'48.9%22S+43%C2%B010'59.8%22W/@-22.913573,-43.183264,17z/data=!3m1!4b1!4m2!3m1!1s0x0:0x0" target="_blank">Sensor: Rio40</a></p>
+				</div>
+				<div id="Rio40_Graph"
+				  style="width:640px; height:480px;">
+				</div>
+			</div>
+			
+			<hr>
+			<hr>
+			<!-- non traffic -->
+			<div class="row">
+				<div class="text">
+					<h4>Sensor far from bus traffic (more than 50m away)</h4>
+				</div>
+			</div>
+			<br>
+			<div class="row" id="swissnexbrasil">
+				<div class="text">
+				  <p><a href="https://www.google.com/maps/place/22%C2%B055'10.9%22S+43%C2%B010'43.0%22W/@-22.919689,-43.178608,17z/data=!3m1!4b1!4m2!3m1!1s0x0:0x0">Sensor: swissnexbrasil</a></p>
+				</div>
+				<div id="swissnexbrasil_Graph"
+				  style="width:640px; height:480px;">
+				</div>
+			</div>
+			
+			<hr>
+			
+			<div class="row" id="coppentt">
+				<div class="text">
+				  <p><a href="https://www.google.com/maps/place/22%C2%B051'35.1%22S+43%C2%B013'49.2%22W/@-22.859755,-43.230328,17z/data=!3m1!4b1!4m2!3m1!1s0x0:0x0">Sensor: coppentt</a></p>
+				</div>
+				<div id="coppentt_Graph"
+				  style="width:640px; height:480px;">
+				</div>
+			</div>
+			
+			<hr>
+			
+			<div class="row"  id="BarraDaTijucaCanvas">
+				<div class="text">
+				  <p><a href="https://www.google.com/maps/place/23%C2%B000'09.8%22S+43%C2%B020'15.6%22W/@-23.00272,-43.337658,17z/data=!3m1!4b1!4m2!3m1!1s0x0:0x0">Sensor: BarraDaTijucaCanvas</a></p>
+				</div>
+				<div id="BarraDaTijucaCanvas_Graph"
+				  style="width:640px; height:480px;">
+				</div>
+			</div>
+			
+			<hr>
+			
+			<div class="row" id="olabi">
+				<div class="text">
+				  <p><a href="https://www.google.com/maps/place/22%C2%B056'50.5%22S+43%C2%B011'16.7%22W/@-22.947349,-43.187962,17z/data=!3m1!4b1!4m2!3m1!1s0x0:0x0">Sensor: olabi</a></p>
+				</div>
+				<div id="olabi_Graph"
+				  style="width:640px; height:480px;">
+				</div>
+			</div>
+			
+			<hr>
+			
+			<div class="row" id="valeriab">
+				<div class="text">
+				  <p><a href="https://www.google.com/maps/place/22%C2%B056'34.9%22S+43%C2%B020'18.2%22W/@-22.943026,-43.338393,17z/data=!4m2!3m1!1s0x0:0x0">Sensor: valeriab</a></p>
+				</div>
+				<div id="valeriab_Graph"
+				  style="width:640px; height:480px;">
+				</div>
+			</div>
+			
+			
+			
+			
+			
+			
+		</div>
+		<hr>
+		<hr>
+        <div class="row">
+            <div class="col-sm-12">
+                <footer>
+                    <p>&copy; Copyright 2015 Marco Jardim</p>
+                </footer>
+            </div>
+        </div>
+	</div>
+
+<script type="text/javascript">
+  var graphOurHomeMakerSpace_DataCanvas_at_Rio = new Dygraph(
+    document.getElementById("OurHomeMakerSpace_DataCanvas_at_Rio_Graph"),
+    "./janeiro/traffic/OurHomeMakerSpace_DataCanvas_at_Rio.csv", // path to CSV file
+    {	
+		plotter: smoothPlotter,
+		visibility: [false, false, true, false, false, false, true, false],
+		highlightSeriesOpts: {
+          strokeWidth: 3,
+          strokeBorderWidth: 1,
+          highlightCircleSize: 5
+        }
+	}          // options
+  );
+  
+  var graphBarmaCanvas = new Dygraph(
+    document.getElementById("BarmaCanvas_Graph"),
+    "./janeiro/traffic/BarmaCanvas.csv", // path to CSV file
+    {	
+		visibility: [false, false, true, false, false, false, true, false],
+		highlightSeriesOpts: {
+          strokeWidth: 3,
+          strokeBorderWidth: 1,
+          highlightCircleSize: 5
+        },
+		plotter: smoothPlotter,
+	}
+   // options
+  );
+  var graphCavalo = new Dygraph(
+    document.getElementById("Cavalo_Graph"),
+    "./janeiro/traffic/Cavalo.csv", // path to CSV file
+    {	
+		plotter: smoothPlotter,
+		visibility: [false, false, true, false, false, false, true, false],
+		highlightSeriesOpts: {
+          strokeWidth: 3,
+          strokeBorderWidth: 1,
+          highlightCircleSize: 5
+        }
+	}          // options
+  );
+  var graphCrispie_Cookie = new Dygraph(
+    document.getElementById("Crispie_Cookie_Graph"),
+    "./janeiro/traffic/Crispie_Cookie.csv", // path to CSV file
+    {	
+		plotter: smoothPlotter,
+		visibility: [false, false, true, false, false, false, true, false],
+		highlightSeriesOpts: {
+          strokeWidth: 3,
+          strokeBorderWidth: 1,
+          highlightCircleSize: 5
+        }
+	}          // options
+  );
+  var graphgaveadatacanvas = new Dygraph(
+    document.getElementById("gaveadatacanvas_Graph"),
+    "./janeiro/traffic/gaveadatacanvas.csv", // path to CSV file
+    {	
+		plotter: smoothPlotter,
+		visibility: [false, false, true, false, false, false, true, false],
+		highlightSeriesOpts: {
+          strokeWidth: 3,
+          strokeBorderWidth: 1,
+          highlightCircleSize: 5
+        }
+	}          // options
+  );
+  var graphkennyduino = new Dygraph(
+    document.getElementById("kennyduino_Graph"),
+    "./janeiro/traffic/kennyduino.csv", // path to CSV file
+    {	
+		plotter: smoothPlotter,
+		visibility: [false, false, true, false, false, false, true, false],
+		highlightSeriesOpts: {
+          strokeWidth: 3,
+          strokeBorderWidth: 1,
+          highlightCircleSize: 5
+        }
+	}          // options
+  );
+  var graphnico = new Dygraph(
+    document.getElementById("nico_Graph"),
+    "./janeiro/traffic/nico.csv", // path to CSV file
+    {	
+		plotter: smoothPlotter,
+		visibility: [false, false, true, false, false, false, true, false],
+		highlightSeriesOpts: {
+          strokeWidth: 3,
+          strokeBorderWidth: 1,
+          highlightCircleSize: 5
+        }
+	}          // options
+  );
+  var graphRio40 = new Dygraph(
+    document.getElementById("Rio40_Graph"),
+    "./janeiro/traffic/Rio40.csv", // path to CSV file
+    {	
+		plotter: smoothPlotter,
+		visibility: [false, false, true, false, false, false, true, false],
+		highlightSeriesOpts: {
+          strokeWidth: 3,
+          strokeBorderWidth: 1,
+          highlightCircleSize: 5
+        }
+	}          // options
+  );
+  
+    // Non traffic area
+  var graphswissnexbrasil = new Dygraph(
+    document.getElementById("swissnexbrasil_Graph"),
+    "./janeiro/pure/swissnexbrasil.csv", // path to CSV file
+    {	
+		plotter: smoothPlotter,
+		visibility: [false, false, true, false, false, false],
+		highlightSeriesOpts: {
+          strokeWidth: 3,
+          strokeBorderWidth: 1,
+          highlightCircleSize: 5
+        }
+	}          // options
+  );
+  var graphBarraDaTijucaCanvas = new Dygraph(
+    document.getElementById("BarraDaTijucaCanvas_Graph"),
+    "./janeiro/pure/BarraDaTijucaCanvas.csv", // path to CSV file
+    {	
+		plotter: smoothPlotter,
+		visibility: [false, false, true, false, false, false],
+		highlightSeriesOpts: {
+          strokeWidth: 3,
+          strokeBorderWidth: 1,
+          highlightCircleSize: 5
+        }
+	}          // options
+  );
+  var graphcoppentt = new Dygraph(
+    document.getElementById("coppentt_Graph"),
+    "./janeiro/pure/coppentt.csv", // path to CSV file
+    {	
+		plotter: smoothPlotter,
+		visibility: [false, false, true, false, false, false],
+		highlightSeriesOpts: {
+          strokeWidth: 3,
+          strokeBorderWidth: 1,
+          highlightCircleSize: 5
+        }
+	}          // options
+  );
+  var grapholabi = new Dygraph(
+    document.getElementById("olabi_Graph"),
+    "./janeiro/pure/olabi.csv", // path to CSV file
+    {	
+		plotter: smoothPlotter,
+		visibility: [false, false, true, false, false, false],
+		highlightSeriesOpts: {
+          strokeWidth: 3,
+          strokeBorderWidth: 1,
+          highlightCircleSize: 5
+        }
+	}          // options
+  );
+  var graphvaleriab = new Dygraph(
+    document.getElementById("valeriab_Graph"),
+    "./janeiro/pure/valeriab.csv", // path to CSV file
+    {	
+		plotter: smoothPlotter,
+		visibility: [false, false, true, false, false, false],
+		highlightSeriesOpts: {
+          strokeWidth: 3,
+          strokeBorderWidth: 1,
+          highlightCircleSize: 5
+        }
+	}          // options
+  );
+  
+   function change(el) {
+	if (parseInt(el.id) < 6) {
+		graphOurHomeMakerSpace_DataCanvas_at_Rio.setVisibility(parseInt(el.id), el.checked);
+		graphRio40.setVisibility(parseInt(el.id), el.checked);
+		graphnico.setVisibility(parseInt(el.id), el.checked);
+		graphkennyduino.setVisibility(parseInt(el.id), el.checked);
+		graphgaveadatacanvas.setVisibility(parseInt(el.id), el.checked);
+		graphCrispie_Cookie.setVisibility(parseInt(el.id), el.checked);
+		graphCavalo.setVisibility(parseInt(el.id), el.checked);
+		graphBarmaCanvas.setVisibility(parseInt(el.id), el.checked);
+		
+		graphswissnexbrasil.setVisibility(parseInt(el.id), el.checked);
+		graphvaleriab.setVisibility(parseInt(el.id), el.checked);
+		grapholabi.setVisibility(parseInt(el.id), el.checked);
+		graphcoppentt.setVisibility(parseInt(el.id), el.checked);
+		graphBarraDaTijucaCanvas.setVisibility(parseInt(el.id), el.checked);	
+	} else {
+		graphOurHomeMakerSpace_DataCanvas_at_Rio.setVisibility(parseInt(el.id), el.checked);
+		graphRio40.setVisibility(parseInt(el.id), el.checked);
+		graphnico.setVisibility(parseInt(el.id), el.checked);
+		graphkennyduino.setVisibility(parseInt(el.id), el.checked);
+		graphgaveadatacanvas.setVisibility(parseInt(el.id), el.checked);
+		graphCrispie_Cookie.setVisibility(parseInt(el.id), el.checked);
+		graphCavalo.setVisibility(parseInt(el.id), el.checked);
+		graphBarmaCanvas.setVisibility(parseInt(el.id), el.checked);
+	}
+}
+
+
+var graphs = [graphOurHomeMakerSpace_DataCanvas_at_Rio,
+	graphRio40,
+	graphnico,
+	graphkennyduino,
+	graphgaveadatacanvas,
+	graphCrispie_Cookie,
+	graphCavalo,
+	graphBarmaCanvas];
+
+//var sync = Dygraph.synchronize(graphs);
+
+$(function () {
+    $('.list-group.checked-list-box .list-group-item').each(function () {
+        
+        // Settings
+        var $widget = $(this),
+            $checkbox = $('<input type="checkbox" class="hidden" />'),
+            color = ($widget.data('color') ? $widget.data('color') : "primary"),
+            style = ($widget.data('style') == "button" ? "btn-" : "list-group-item-"),
+            settings = {
+                on: {
+                    icon: 'glyphicon glyphicon-check'
+                },
+                off: {
+                    icon: 'glyphicon glyphicon-unchecked'
+                }
+            };
+            
+        $widget.css('cursor', 'pointer')
+        $widget.append($checkbox);
+
+        // Event Handlers
+        $widget.on('click', function () {
+            $checkbox.prop('checked', !$checkbox.is(':checked'));
+            $checkbox.triggerHandler('change');
+            updateDisplay();
+        });
+        $checkbox.on('change', function () {
+            updateDisplay();
+        });
+          
+
+        // Actions
+        function updateDisplay() {
+            var isChecked = $checkbox.is(':checked');
+
+            // Set the button's state
+            $widget.data('state', (isChecked) ? "on" : "off");
+
+            // Set the button's icon
+            $widget.find('.state-icon')
+                .removeClass()
+                .addClass('state-icon ' + settings[$widget.data('state')].icon);
+
+            // Update the button's color
+            if (isChecked) {
+                $widget.addClass(style + color + ' active');
+            } else {
+                $widget.removeClass(style + color + ' active');
+            }
+        }
+
+        // Initialization
+        function init() {
+            
+            if ($widget.data('checked') == true) {
+                $checkbox.prop('checked', !$checkbox.is(':checked'));
+            }
+            
+            updateDisplay();
+
+            // Inject the icon if applicable
+            if ($widget.find('.state-icon').length == 0) {
+                $widget.prepend('<span class="state-icon ' + settings[$widget.data('state')].icon + '"></span>');
+            }
+        }
+        init();
+    });
+    
+    $('#get-checked-data').on('click', function(event) {
+        event.preventDefault(); 
+        var checkedItems = {}, counter = 0;
+        $("#check-list-box li.active").each(function(idx, li) {
+            checkedItems[counter] = $(li).text();
+            counter++;
+        });
+        $('#display-json').html(JSON.stringify(checkedItems, null, '\t'));
+    });
+});
+
+</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-49628280-4', 'auto');
+  ga('send', 'pageview');
+
+</script>
+</body>
+</html>

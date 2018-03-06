@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Circles</title>
+    <style>
+      html, body, #map-canvas {
+        height: 100%;
+        margin: 0px;
+        padding: 0px
+      }
+	  #legend {
+		background: white;
+		padding: 10px;
+		position: absolute;
+		top: 20px;
+		max-width: 240px;
+	  }
+	  
+	  .legend-header {
+	  }
+
+    </style>
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true"></script>
+    <script>
+// This example creates circles on the map, representing
+// deltaPollutions in Rio de Janeiro
+
+// First, create an object containing LatLng and deltaPollution for each sensor.
+var citymap = {};
+citymap['OurHomeMakerSpace_DataCanvas_at_Rio'] = {
+  center: new google.maps.LatLng(-22.964066, -43.217525),
+  deltaPollution: 40.05,
+  trafficPeak: 179
+};
+citymap['BarmaCanvas'] = {
+  center: new google.maps.LatLng(-22.944356, -43.162153),
+  deltaPollution: 24.55,
+  trafficPeak: 21
+};
+citymap['Cavalo'] = {
+  center: new google.maps.LatLng(-22.927436, -43.244369),
+  deltaPollution: 11.97,
+  trafficPeak: 88
+};
+citymap['Crisp_Cookie'] = {
+  center: new google.maps.LatLng(-22.927404, -43.240120),
+  deltaPollution: 7.12,
+  trafficPeak: 48
+};
+citymap['GaveaDataCanvas'] = {
+  center: new google.maps.LatLng(-22.980838, -43.234322),
+  deltaPollution: 6.95,
+  trafficPeak: 63
+};
+citymap['Kennyduino'] = {
+  center: new google.maps.LatLng(-22.842785, -43.263258),
+  deltaPollution: 11.88,
+  trafficPeak: 71
+};
+citymap['Nico'] = {
+  center: new google.maps.LatLng(-22.956139, -43.198912),
+  deltaPollution: 37.84,
+  trafficPeak: 150
+};
+
+citymap['Rio40'] = {
+  center: new google.maps.LatLng(-22.913573, -43.183264),
+  deltaPollution: 16.58,
+  trafficPeak: 171
+};
+
+// non traffic
+citymap['swissnexbrazil'] = {
+  center: new google.maps.LatLng(-22.919689, -43.178608),
+  deltaPollution: 11.94,
+  trafficPeak: 0
+};
+citymap['coppentt'] = {
+  center: new google.maps.LatLng(-22.859755, -43.230328),
+  deltaPollution: 10.43,
+  trafficPeak: 0
+};
+citymap['BarraDaTijucaCanvas'] = {
+  center: new google.maps.LatLng(-23.002720, -43.337658),
+  deltaPollution: 17.35,
+  trafficPeak: 0
+};
+citymap['olabi'] = {
+  center: new google.maps.LatLng(-22.947349, -43.187962),
+  deltaPollution: 12.41,
+  trafficPeak: 0
+};
+citymap['valeriab'] = {
+  center: new google.maps.LatLng(-22.943026, -43.338393),
+  deltaPollution: 8.65,
+  trafficPeak: 0
+};
+
+
+
+
+
+var cityCircle;
+var marker;
+
+var maxTraffic = 0;
+var maxPollution = 0;
+
+for(city in citymap) {
+	if (citymap[city].trafficPeak > maxTraffic) {
+		maxTraffic = citymap[city].trafficPeak;
+	}
+	if (citymap[city].deltaPollution > maxPollution) {
+		maxPollution = citymap[city].deltaPollution;
+	}	
+}
+
+function percentToRGB(mark) { // green = 0%; red = 100%
+	var percent = 100*(mark/maxTraffic);
+    if (percent === 100) {
+        percent = 99
+    }
+    var r, g, b;
+
+    if (percent < 50) {
+        // green to yellow
+        r = Math.round(255 * (percent / 50));
+        g = 255;
+
+    } else {
+        // yellow to red
+        r = 255;
+        g = Math.round(255 * ((50 - percent % 50) / 50));
+    }
+    b = 0;
+
+    return "rgb(" + r + "," + g + "," + b + ")";
+}
+
+
+function initialize() {
+  // Create the map.
+  var mapOptions = {
+    zoom: 12,
+    center: new google.maps.LatLng(-22.882316, -43.280475),
+    mapTypeId: google.maps.MapTypeId.TERRAIN,
+	panControl: false,
+    zoomControl: false,
+    scaleControl: true
+  };
+
+  var map = new google.maps.Map(document.getElementById('map-canvas'),
+      mapOptions);
+
+
+	  
+  // Construct the circle for each value in citymap.
+  // Note: We scale the area of the circle based on the deltaPollution.
+  for (var city in citymap) {
+    var deltaPollutionOptions = {
+      strokeColor: '#000000',
+      strokeOpacity: 0.5,
+      strokeWeight: 1,
+      fillColor: percentToRGB(citymap[city].trafficPeak),
+      fillOpacity: 0.35,
+      map: map,
+      center: citymap[city].center,
+      radius: (citymap[city].deltaPollution/maxPollution) * 100 * 10
+    };
+	var sensorMarkers = {
+		map:map,
+		draggable:false,
+		animation: google.maps.Animation.DROP,
+		position: citymap[city].center
+	}
+    // Add the circle for this city to the map.
+    cityCircle = new google.maps.Circle(deltaPollutionOptions);
+	marker = new google.maps.Marker(sensorMarkers);
+	
+	var content = "<p> Sensor: "+ city +"</p>" +
+					"<p>Pollutuion variance: "+ citymap[city].deltaPollution +" mV</p>" +
+					"<p>Traffic peak: "+ citymap[city].trafficPeak +" bus/hour</p>";
+
+	var infowindow = new google.maps.InfoWindow();
+	
+	google.maps.event.addListener(marker,'click', (function(marker,content,infowindow){ 
+		return function() {
+			infowindow.setContent(content);
+			infowindow.open(map,marker);
+		};
+	})(marker,content,infowindow)); 
+	
+  }
+  
+}
+
+google.maps.event.addDomListener(window, 'load', initialize);
+
+
+    </script>
+  </head>
+  <body>
+    <div id="map-canvas"></div>
+	<div id="legend">
+		<div class="legend-header">
+			<h4>Correlation between air pollution and bus traffic</h4>
+			<p>This map shows that sensors located very close to high bus traffic streets (50m radius) had a bigger gap between the lowest and the highest air pollution values.</p>
+			<p>The <strong>circle radius</strong> shows how big was the daily gap between <strong>lowest and highest</strong> air pollution value.</p>
+			<p><strong>Without bus traffic</strong> near the sensor, the circle shows a solid <strong>green</strong> colour.</p>
+			<p>More the traffic, <strong>reddish</strong> the circle become. The bus traffic value is normalized with it's week peak.</p>
+			<hr>
+			<h5>Data collected between 25/01/2015 and 31/01/2015, an extremely hot week in Rio, with heavy rains at 18:00. It helps the air pollutants natural transportation to high layers of the atmosphere, decreasing city pollution.</h5>
+			<h5>Clicking on the marks gives some info about the sensor and the collected data.</h5>
+		</div>
+	</div>
+
+  </body>
+</html>
