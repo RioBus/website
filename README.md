@@ -20,4 +20,4 @@ other environments by customising Gruntfile.js.
 
 ## Testing
 
-Running `grunt test` will run the unit tests with karma.
+Running `grunt test` will run the unit tests with karma.after using this give us feedback 
